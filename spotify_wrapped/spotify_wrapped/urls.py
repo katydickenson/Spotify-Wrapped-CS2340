@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from wrapped import views as views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('wrapped.urls')),
+    path('wrapdata/', views.wrapdata, name='wrapdata'),
 ]
