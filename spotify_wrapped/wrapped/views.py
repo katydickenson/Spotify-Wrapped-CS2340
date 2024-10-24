@@ -1,127 +1,113 @@
-from urllib.parse import urlencode
-from django.http import HttpResponse
+import logging
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.conf import settings
-import base64
-import hashlib
-import os
-import requests
-import logging
-from .models import SpotifyUser
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 
 
+def require_spotify_auth(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        access_token = request.session.get('access_token')
+
+        if not access_token:
+            # Store the intended destination URL in the session
+            request.session['next'] = request.get_full_path()
+            return redirect('login')
+
+        try:
+            # Verify the token is still valid
+            spotify = spotipy.Spotify(auth=access_token)
+            spotify.me()  # This will raise an exception if the token is invalid
+            return view_func(request, *args, **kwargs)
+        except Exception as e:
+            logger.warning(f"Spotify token validation failed: {str(e)}")
+            request.session.flush()
+            return redirect('login')
+
+    return wrapper
+
+
+def get_spotify_auth_manager(request):
+    scope = 'user-read-private user-read-email'
+    cache_handler = None  # Don't use cache handler to prevent auto-login
+
+    return SpotifyOAuth(
+        client_id=settings.SPOTIFY_CLIENT_ID,
+        client_secret=settings.SPOTIFY_CLIENT_SECRET,
+        redirect_uri=settings.SPOTIFY_REDIRECT_URI,
+        scope=scope,
+        cache_handler=cache_handler,
+        show_dialog=True  # Always show the Spotify login dialog
+    )
+
+
+@require_spotify_auth
 def home(request):
-    user_name = request.session.get('user_name')
-    access_token = request.session.get('access_token')
+    spotify = spotipy.Spotify(auth=request.session['access_token'])
+    user_name = spotify.me().get('display_name', 'User')
 
-    if access_token is None:
-        return redirect('login')  # Redirect to login if not authenticated
-
-    return render(request, 'wrapped/home.html', {'user_name': user_name})
+    return render(request, 'wrapped/home.html', {
+        'user_name': user_name
+    })
 
 
 def login(request):
+    """Show the custom login page"""
     return render(request, 'wrapped/login.html')
 
 
-def generate_code_verifier():
-    token = os.urandom(96)
-    code_verifier = base64.urlsafe_b64encode(token).decode('utf-8')
-    return code_verifier.replace('=', '')
+def initiate_spotify_auth(request):
+    """Handle the actual Spotify authentication after user clicks the button"""
+    # Clear any existing session data
+    request.session.flush()
 
+    # Ensure session is created
+    if not request.session.session_key:
+        request.session.create()
 
-def generate_code_challenge(code_verifier):
-    sha256_hashed = hashlib.sha256(code_verifier.encode()).digest()
-    base64_encoded = base64.urlsafe_b64encode(sha256_hashed).decode('utf-8')
-    # Step 3: Remove any padding (=)
-    code_challenge = base64_encoded.replace('=', '')
-    return code_challenge
+    auth_manager = get_spotify_auth_manager(request)
+    auth_url = auth_manager.get_authorize_url()
 
-
-def spotify_login(request):
-    # Clear specific session keys instead of flushing entire session
-    request.session.pop('code_verifier', None)
-
-    code_verifier = generate_code_verifier()
-
-    # Store code verifier in session
-    request.session['code_verifier'] = code_verifier
-    request.session.modified = True
-
-    logger.debug(f"Code verifier set: {code_verifier}")
-
-    code_challenge = generate_code_challenge(code_verifier)
-    logger.debug(f"Code challenge: {code_challenge}")
-
-    auth_url = "https://accounts.spotify.com/authorize"
-    auth_params = {
-        "client_id": settings.SPOTIFY_CLIENT_ID,
-        "response_type": "code",
-        "redirect_uri": settings.SPOTIFY_REDIRECT_URI,
-        "code_challenge_method": "S256",
-        "code_challenge": code_challenge,
-        "scope": "user-read-private user-read-email"
-    }
-
-    auth_request_url = f"{auth_url}?{urlencode(auth_params)}"
-    logger.debug(f"Auth URL: {auth_request_url}")
-
-    return redirect(auth_request_url)
+    return redirect(auth_url)
 
 
 def spotify_callback(request):
+    error = request.GET.get('error')
+    if error:
+        logger.error(f"Spotify authentication error: {error}")
+        return redirect('login')
+
     code = request.GET.get('code')
     if not code:
-        logger.error("No authorization code received")
-        return HttpResponse("No authorization code received", status=400)
-
-    code_verifier = request.session.get('code_verifier')
-    if not code_verifier:
-        logger.error("No code verifier found in session")
-        return HttpResponse("No code verifier found in session", status=400)
-
-    logger.debug(f"Retrieved code: {code}")
-    logger.debug(f"Retrieved code_verifier: {code_verifier}")
-
-    token_url = "https://accounts.spotify.com/api/token"
-    token_data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": settings.SPOTIFY_REDIRECT_URI,
-        "client_id": settings.SPOTIFY_CLIENT_ID,
-        "code_verifier": code_verifier
-    }
-
-    logger.debug(f"Token request data: {token_data}")
+        logger.error("No authorization code received from Spotify")
+        return redirect('login')
 
     try:
-        response = requests.post(token_url, data=token_data)
-        if response.status_code != 200:
-            logger.error(
-                f"Token exchange failed. Status: {response.status_code}")
-            logger.error(f"Response: {response.text}")
-            return HttpResponse(f"Token exchange failed: {response.text}",
-                                status=400)
+        auth_manager = get_spotify_auth_manager(request)
+        token_info = auth_manager.get_access_token(code)
+        access_token = token_info.get('access_token')
 
-        token_info = response.json()
+        if not access_token:
+            raise ValueError("No access token returned")
 
-        request.session['access_token'] = token_info['access_token']
-
-        headers = {"Authorization": f"Bearer {token_info['access_token']}"}
-        user_response = requests.get("https://api.spotify.com/v1/me",
-                                     headers=headers)
-        user_data = user_response.json()
-
-        request.session['user_name'] = user_data.get('display_name', 'Guest')
-        request.session['user_id'] = user_data['id']
-
-        request.session.pop('code_verifier', None)
+        # Store the access token in the session
+        request.session['access_token'] = access_token
         request.session.modified = True
 
-        return redirect('home')
+        # Redirect to the stored 'next' URL or home
+        next_url = request.session.pop('next', 'home')
+        return redirect(next_url)
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request failed: {str(e)}")
-        return HttpResponse(f"Error: {str(e)}", status=400)
+    except Exception as e:
+        logger.error(f"Error during Spotify callback: {str(e)}")
+        return redirect('login')
+
+
+def logout(request):
+    request.session.flush()
+    return redirect('login')
