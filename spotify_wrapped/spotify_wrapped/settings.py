@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'wrapped',
+    'rest_framework',
+    "rest_framework.authtoken",
 ]
 
 MIDDLEWARE = [
@@ -111,6 +113,11 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+SPOTIFY_CLIENT_ID = 'd7019771ebf5451f9a5759e846b7c975'
+SPOTIFY_CLIENT_SECRET = '49f9de6b77cd47b5ae65ed5a7f3c11a9'
+SPOTIFY_REDIRECT_URI = 'http://localhost:8000/callback/'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 
 # Static files (CSS, JavaScript, Images)

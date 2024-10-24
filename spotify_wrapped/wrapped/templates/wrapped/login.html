@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Wrapped Login Page</title>
+</head>
+<body>
+    <h1>Welcome to Your Spotify Wrapped</h1>
+    <p>Sign in now to view your listening habits!</p>
+    <a href="{% url 'spotify_login' %}">  <!-- Make sure the URL name matches your view -->
+        <button>Sign in with Spotify</button>
+    </a>
+</body>
+</html>
