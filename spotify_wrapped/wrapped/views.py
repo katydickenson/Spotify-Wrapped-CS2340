@@ -499,6 +499,17 @@ def addfriends(request):
     except Exception as e:
         logger.error(f"Error in addfriends view: {str(e)}")
         return redirect('login')
+    
+@require_spotify_auth
+def wrapped_filters(request):
+    if request.method == 'POST':
+        time_range = request.POST.get('time_range')
+        holiday = request.POST.get('holiday')
+        # Add logic here to redirect to results page with these filters
+        return redirect('results_page')  # Create this URL name later
+    return render(request, 'wrapped/wrapped_filters.html')
+    
+    
 
 
 

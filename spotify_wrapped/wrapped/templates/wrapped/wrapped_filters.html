@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Your Wrapped</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #282828;
+            --spotify-light-gray: #B3B3B3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--spotify-black);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, var(--spotify-green), #4eda7c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .filter-form {
+            background-color: var(--spotify-dark-gray);
+            padding: 2rem;
+            border-radius: 10px;
+        }
+
+        .filter-section {
+            margin-bottom: 2rem;
+        }
+
+        .filter-section h2 {
+            color: var(--spotify-green);
+            margin-bottom: 1rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .option-button {
+            background-color: var(--spotify-black);
+            border: 1px solid var(--spotify-green);
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-button:hover {
+            background-color: var(--spotify-green);
+            color: var(--spotify-black);
+        }
+
+        .option-button.selected {
+            background-color: var(--spotify-green);
+            color: var(--spotify-black);
+        }
+
+        .submit-button {
+            background-color: var(--spotify-green);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Customize Your Wrapped</h1>
+        
+        <form class="filter-form" method="POST">
+            {% csrf_token %}
+            
+            <div class="filter-section">
+                <h2>Time Range</h2>
+                <div class="options-grid">
+                    <button type="button" class="option-button" data-value="1month">Last Month</button>
+                    <button type="button" class="option-button" data-value="6months">6 Months</button>
+                    <button type="button" class="option-button" data-value="1year">One Year</button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h2>Holiday Theme</h2>
+                <div class="options-grid">
+                    <button type="button" class="option-button" data-value="none">None</button>
+                    <button type="button" class="option-button" data-value="halloween">Halloween</button>
+                    <button type="button" class="option-button" data-value="christmas">Christmas</button>
+                    <button type="button" class="option-button" data-value="valentines">Valentine's Day</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="time_range" id="time_range">
+            <input type="hidden" name="holiday" id="holiday">
+            
+            <button type="submit" class="submit-button">Generate My Wrapped</button>
+        </form>
+    </div>
+
+    <script>
+        // Handle button selection
+        document.querySelectorAll('.option-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Remove selected class from siblings
+                const parent = this.parentElement;
+                parent.querySelectorAll('.option-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                // Add selected class to clicked button
+                this.classList.add('selected');
+                
+                // Update hidden input
+                if (parent.parentElement.querySelector('h2').textContent === 'Time Range') {
+                    document.getElementById('time_range').value = this.dataset.value;
+                } else {
+                    document.getElementById('holiday').value = this.dataset.value;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
