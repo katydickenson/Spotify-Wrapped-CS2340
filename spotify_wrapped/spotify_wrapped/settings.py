@@ -53,6 +53,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "spotify_wrapped.urls"
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 TEMPLATES = [
     {
@@ -126,5 +128,13 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
+SESSION_COOKIE_SECURE = True  # if using HTTPS
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# Add these to prevent infinite loops
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+

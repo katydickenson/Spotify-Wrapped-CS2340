@@ -1,0 +1,936 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Wrapped - Add Friends</title>
+    <style>
+        .search-result-item.error {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid #ff4444;
+    padding-left: 1rem;
+}
+      .friend-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    overflow: hidden;
+    background-color: var(--spotify-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.friend-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block; /* Add this */
+}
+
+.search-result-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    overflow: hidden;
+    background-color: var(--spotify-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-result-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block; /* Add this */
+}
+
+.error-details {
+    font-size: 0.8rem;
+    color: var(--spotify-light-gray);
+    margin-top: 0.5rem;
+}
+
+.search-hint {
+    font-size: 0.8rem;
+    color: var(--spotify-green);
+    margin-top: 0.5rem;
+}
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #282828;
+            --spotify-light-gray: #B3B3B3;
+        }
+        add-friend-btn {
+    background-color: var(--spotify-green);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 1rem;  /* Add spacing between info and button */
+}
+
+.add-friend-btn:hover {
+    transform: scale(1.05);
+    background-color: #1ed760;
+}
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    position: relative;
+}
+
+.back-button {
+    position: absolute;
+    left: 0;
+    background-color: transparent;
+    border: 1px solid var(--spotify-green);
+    color: var(--spotify-green);
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.back-button:hover {
+    background-color: var(--spotify-green);
+    color: white;
+    transform: translateX(-5px);
+}
+
+.back-arrow {
+    font-size: 1.2rem;
+}
+
+.add-friend-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.add-friend-btn.added {
+    background-color: #1ed760;
+    cursor: default;
+}
+
+.add-friend-btn.error {
+    background-color: #ff4444;
+}
+
+/* Update search result item to accommodate button */
+.search-result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--spotify-dark-gray);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: none;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    display: none;
+}
+
+.popup-content {
+    text-align: center;
+}
+
+.popup-button {
+    background-color: var(--spotify-green);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.popup-button:hover {
+    transform: scale(1.05);
+    background-color: #1ed760;
+}
+
+.search-result-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--spotify-dark-gray);
+            border-radius: 4px;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-result-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            overflow: hidden;
+        }
+
+        .search-result-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-result-info {
+            flex-grow: 1;
+        }
+
+        .search-result-name {
+            color: white;
+            font-weight: 500;
+        }
+
+        .search-result-id {
+            color: var(--spotify-light-gray);
+            font-size: 0.8rem;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 1rem;
+            color: var(--spotify-light-gray);
+            display: none;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--spotify-black);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--spotify-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            overflow: hidden; /* Add this to ensure the image stays within the circle */
+        }
+        .user-avatar img {
+        width: 100%;
+        height: 100%;object-fit: cover; /* This ensures the image covers the entire space properly */
+            
+        }
+
+        .logout-btn {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: white;
+            color: var(--spotify-black);
+        }
+
+        main {
+            padding: 8rem 2rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--spotify-green), #4eda7c);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--spotify-light-gray);
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .dashboard-card {
+            background-color: var(--spotify-dark-gray);
+            padding: 2rem;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .dashboard-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 10px;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            opacity: 1;
+        }
+        
+
+        .card-title {
+            color: var(--spotify-green);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .placeholder-text {
+            color: var(--spotify-light-gray);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            main {
+                padding: 7rem 1rem 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .friends-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .friends-section {
+            background-color: var(--spotify-dark-gray);
+            padding: 2rem;
+            border-radius: 10px;
+            height: fit-content;
+        }
+
+        .friends-list {
+            margin-top: 1rem;
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .friend-item:hover {
+            transform: translateX(5px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background-color: var(--spotify-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-friend-form {
+            margin-top: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .search-input:focus {
+            outline: 2px solid var(--spotify-green);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .add-btn {
+            background-color: var(--spotify-green);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background-color: #1ed760;
+            transform: scale(1.05);
+        }
+
+        .section-title {
+            color: var(--spotify-green);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .no-friends-message {
+            color: var(--spotify-light-gray);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .friends-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Keep your existing navbar -->
+    <nav class="navbar">
+        <div class="user-info">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="{{ user_name }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar">
+                    {{ user_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <span>{{ user_name }}</span>
+        </div>
+        <a href="{% url 'logout' %}">
+            <button class="logout-btn">Logout</button>
+        </a>
+    </nav>
+
+    <main>
+        <section class="welcome-section">
+    <div class="header-container">
+        <a href="{% url 'home' %}" class="back-button">
+            <span class="back-arrow">←</span> Back
+        </a>
+        <div>
+            <h1>Friends</h1>
+            <p class="subtitle">Connect with friends to create Duo-Wraps!</p>
+        </div>
+    </div>
+</section>
+
+        <div class="friends-container">
+            <!-- Current Friends Section -->
+            <div class="friends-section">
+                <h2 class="section-title">Current Friends</h2>
+                <div class="friends-list">
+                   <!-- Inside the friends-list div -->
+<div class="friends-list">
+    {% if has_friends %}
+        {% for friend in friends %}
+            <div class="friend-item">
+                {% if friend.profile_image %}
+                    <img src="{{ friend.profile_image }}" alt="{{ friend.user_name }}" class="friend-avatar">
+                {% else %}
+                    <div class="friend-avatar">
+                        {{ friend.user_name|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+                <div class="friend-info">
+                    <span class="friend-name">{{ friend.user_name }}</span>
+                    <span class="friend-id">{{ friend.spotify_id }}</span>
+                </div>
+                <button class="remove-friend-btn" onclick="removeFriend('{{ friend.spotify_id }}')">
+                    Remove
+                </button>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-friends-message">
+    <p>Looks like it's a bit lonely here! 🎵</p>
+    <p>Add some friends to start creating amazing Duo-Wraps together!</p>
+</div>
+    {% endif %}
+</div>
+
+<!-- Add these styles -->
+<style>
+    .friend-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .friend-item:hover {
+        transform: translateX(5px);
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .friend-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 1rem;
+        overflow: hidden;
+    }
+
+    .friend-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .friend-info {
+        flex-grow: 1;
+    }
+
+    .friend-name {
+        display: block;
+        font-weight: bold;
+        color: var(--spotify-green);
+    }
+
+    .friend-id {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--spotify-light-gray);
+    }
+
+    .remove-friend-btn {
+        background-color: transparent;
+        border: 1px solid var(--spotify-light-gray);
+        color: var(--spotify-light-gray);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .remove-friend-btn:hover {
+        background-color: #ff4444;
+        border-color: #ff4444;
+        color: white;
+    }
+
+    .no-friends-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--spotify-light-gray);
+    }
+
+    .empty-state-image {
+        width: 150px;
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+
+    .add-friend-form {
+        margin-top: 2rem;
+    }
+</style>
+
+<!-- Add this JavaScript for friend removal -->
+<script>
+function removeFriend(friendId) {
+    if (confirm('Are you sure you want to remove this friend?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'remove_friend' %}";
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        
+        const friendInput = document.createElement('input');
+        friendInput.type = 'hidden';
+        friendInput.name = 'friend_id';
+        friendInput.value = friendId;
+        
+        form.appendChild(csrfInput);
+        form.appendChild(friendInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+                </div>
+            </div>
+
+            <!-- Add Friends Section -->
+            <div class="friends-section">
+    <h2 class="section-title">Add New Friends</h2>
+    <div class="search-container">
+        <input 
+            type="text" 
+            class="search-input" 
+            id="friendSearch"
+            placeholder="Enter Spotify ID"
+            autocomplete="off"
+        >
+        <div class="loading-indicator" id="loadingIndicator">
+            Searching...
+        </div>
+        <div class="search-results" id="searchResults">
+    {% for user in users %}
+    <div class="search-result-item">
+        <div class="search-result-avatar">
+            {% if user.profile_image %}
+                <img src="{{ user.profile_image }}" alt="{{ user.user_name }}">
+            {% else %}
+                <div class="avatar-placeholder">{{ user.user_name|slice:":1"|upper }}</div>
+            {% endif %}
+        </div>
+        <div class="search-result-info">
+            <div class="search-result-name">{{ user.user_name }}</div>
+            <div class="search-result-id">{{ user.spotify_id }}</div>
+        </div>
+        <button class="add-friend-btn" onclick="addFriend('{{ user.spotify_id }}', this)">
+            Add Friend
+        </button>
+    </div>
+    {% endfor %}
+</div>
+    <p style="margin-top: 1rem; color: var(--spotify-light-gray);">
+        Your Spotify ID: {{ spotify_id }}
+    </p>
+    <p style="color: var(--spotify-light-gray);">
+        Share your Spotify ID with friends to connect!
+    </p>
+</div>
+            <div class="popup-overlay" id="popupOverlay"></div>
+<div class="popup" id="popup">
+    <div class="popup-content">
+        <p id="popupMessage"></p>
+        <button class="popup-button" onclick="closePopup()">OK</button>
+    </div>
+</div>
+        </div>
+    <script>
+    let searchTimeout;
+    const searchInput = document.getElementById('friendSearch');
+    const searchResults = document.getElementById('searchResults');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(searchTimeout);
+        
+        if (query.length >= 1) {
+            loadingIndicator.style.display = 'block';
+            searchResults.style.display = 'none';
+            
+            searchTimeout = setTimeout(() => {
+                fetchSearchResults(query);
+            }, 300);
+        } else {
+            searchResults.style.display = 'none';
+            loadingIndicator.style.display = 'none';
+        }
+    });
+   async function addFriend(friendId, button) {
+    try {
+        button.disabled = true;
+        button.textContent = 'Adding...';
+
+        const response = await fetch('/add-friend/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: `friend_id=${encodeURIComponent(friendId)}`
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            button.textContent = 'Added!';
+            button.classList.add('added');
+            button.disabled = true;
+            
+            // Refresh the friends list immediately
+            await refreshFriendsList();
+            
+            // Clear the search results
+            searchResults.style.display = 'none';
+            searchInput.value = '';
+            
+            // Show success message
+            showPopup('Friend added successfully!');
+        } else {
+            if (data.error === 'Already friends with this user') {
+                showPopup('You are already friends with this user!');
+            } else {
+                showPopup(data.error || 'Failed to add friend');
+            }
+            button.textContent = 'Add Friend';
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error adding friend:', error);
+        button.textContent = 'Error';
+        button.classList.add('error');
+        showPopup('An error occurred while adding friend');
+        
+        setTimeout(() => {
+            button.textContent = 'Add Friend';
+            button.classList.remove('error');
+            button.disabled = false;
+        }, 2000);
+    }
+}
+function showPopup(message) {
+    document.getElementById('popupMessage').textContent = message;
+    document.getElementById('popup').style.display = 'block';
+    document.getElementById('popupOverlay').style.display = 'block';
+}
+
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    document.getElementById('popupOverlay').style.display = 'none';
+}
+
+async function refreshFriendsList() {
+    try {
+        const response = await fetch('/get-friends/');
+        const data = await response.json();
+        
+        const friendsList = document.querySelector('.friends-list');
+        if (data.success && data.friends && data.friends.length > 0) {
+            friendsList.innerHTML = `
+                <div class="friends-list-container">
+                    ${data.friends.map(friend => `
+                        <div class="friend-item">
+                            <div class="friend-avatar">
+                                ${friend.profile_image 
+                                    ? `<img src="${friend.profile_image}" alt="${friend.user_name}">`
+                                    : `<div class="avatar-placeholder">${friend.user_name.charAt(0).toUpperCase()}</div>`
+                                }
+                            </div>
+                            <div class="friend-info">
+                                <span class="friend-name">${friend.user_name}</span>
+                                <span class="friend-id">${friend.spotify_id}</span>
+                            </div>
+                            <button class="remove-friend-btn" onclick="removeFriend('${friend.spotify_id}')">
+                                Remove
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            friendsList.innerHTML = `
+                <div class="no-friends-message">
+                    <p>Looks like it's a bit lonely here! 🎵</p>
+                    <p>Add some friends to start creating amazing Duo-Wraps together!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error refreshing friends list:', error);
+        showPopup('Error updating friends list');
+    }
+}
+
+   async function fetchSearchResults(query) {
+    try {
+        loadingIndicator.style.display = 'block';
+        searchResults.style.display = 'none';
+
+        // Add query parameters properly
+        const url = new URL('/search-users/', window.location.origin);
+        url.searchParams.append('query', query);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        loadingIndicator.style.display = 'none';
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch results');
+        }
+
+        if (data.results && data.results.length > 0) {
+            displayResults(data.results);
+        } else {
+            searchResults.innerHTML = `
+                <div class="search-result-item">
+                    <p>No users found with Spotify ID: ${query}</p>
+                    <p class="search-hint">Try entering a complete Spotify ID</p>
+                </div>`;
+            searchResults.style.display = 'block';
+        }
+
+    } catch (error) {
+        console.error('Search error:', error);
+        loadingIndicator.style.display = 'none';
+        searchResults.innerHTML = `
+            <div class="search-result-item error">
+                <p>Error searching for users. Please try again.</p>
+                <p class="error-details">${error.message}</p>
+            </div>`;
+        searchResults.style.display = 'block';
+    }
+}
+
+function displayResults(results) {
+    try {
+        const resultsHtml = results.map(user => {
+            const isFriend = Array.from(document.querySelectorAll('.friend-id')).some(
+                el => el.textContent === user.id
+            );
+            
+            return `
+                <div class="search-result-item">
+                    <div class="search-result-avatar">
+                        ${user.profile_image 
+                            ? `<img src="${user.profile_image}" alt="${user.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${user.name.charAt(0).toUpperCase()}</text></svg>'">`
+                            : `<div class="avatar-placeholder">${user.name.charAt(0).toUpperCase()}</div>`
+                        }
+                    </div>
+                    <div class="search-result-info">
+                        <div class="search-result-name">${user.name}</div>
+                        <div class="search-result-id">${user.id}</div>
+                    </div>
+                    <button class="add-friend-btn ${isFriend ? 'added' : ''}" 
+                            onclick="addFriend('${user.id}', this)"
+                            ${isFriend ? 'disabled' : ''}>
+                        ${isFriend ? 'Friends' : 'Add Friend'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        searchResults.innerHTML = resultsHtml || '<div class="search-result-item">No matching users found</div>';
+        searchResults.style.display = 'block';
+    } catch (error) {
+        console.error('Error displaying results:', error);
+        searchResults.innerHTML = '<div class="search-result-item error">Error displaying results</div>';
+    }
+}
+</script>
+    </main>
+</body>
+</html>

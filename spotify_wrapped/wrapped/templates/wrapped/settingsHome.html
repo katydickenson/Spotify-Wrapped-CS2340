@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Wrapped - Settings</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #282828;
+            --spotify-light-gray: #B3B3B3;
+            --spotify-red: #E74C3C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--spotify-black);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .back-button {
+            color: var(--spotify-light-gray);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-button:hover {
+            color: white;
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        main {
+            padding: 8rem 2rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            margin-bottom: 3rem;
+        }
+
+        .settings-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--spotify-green), #4eda7c);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .settings-description {
+            color: var(--spotify-light-gray);
+            font-size: 1.1rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .settings-section {
+            background-color: var(--spotify-dark-gray);
+            padding: 2rem;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .settings-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .danger-zone {
+            border: 1px solid var(--spotify-red);
+            position: relative;
+        }
+
+        .danger-zone::before {
+            content: 'Danger Zone';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background-color: var(--spotify-red);
+            padding: 0 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .section-title {
+            color: var(--spotify-green);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .danger-zone .section-title {
+            color: var(--spotify-red);
+        }
+
+        .section-content {
+            color: var(--spotify-light-gray);
+            margin-bottom: 1.5rem;
+        }
+
+        .action-button {
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-button {
+            background-color: transparent;
+            border: 2px solid var(--spotify-red);
+            color: var(--spotify-red);
+        }
+
+        .delete-button:hover {
+            background-color: var(--spotify-red);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            main {
+                padding: 7rem 1rem 1rem;
+            }
+
+            .settings-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{% url 'home' %}" class="back-button">
+            ← Back to Dashboard
+        </a>
+        <div class="page-title">Settings</div>
+        <div style="width: 80px;"><!-- Spacer for flex alignment --></div>
+    </nav>
+
+    <main>
+        <section class="settings-header">
+            <h1 class="settings-title">Account Settings</h1>
+            <p class="settings-description">Manage your account preferences and settings</p>
+        </section>
+
+       <div class="settings-grid">
+    <form action="{% url 'delete_account' %}" method="post" onsubmit="return confirmDeletion();">
+        {% csrf_token %}
+        <div class="settings-section danger-zone">
+            <h2 class="section-title">Delete Account</h2>
+            <p class="section-content">
+                Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <button type="submit" class="action-button delete-button">Delete Account</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function confirmDeletion() {
+        return confirm("Are you sure? This action will permanently delete your account and all associated data, and cannot be undone.");
+    }
+</script>
+    </main>
+</body>
+</html>
