@@ -129,19 +129,15 @@
     </div>
 
     <script>
-        // Handle button selection
         document.querySelectorAll('.option-button').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
-                // Remove selected class from siblings
                 const parent = this.parentElement;
                 parent.querySelectorAll('.option-button').forEach(btn => {
                     btn.classList.remove('selected');
                 });
-                // Add selected class to clicked button
                 this.classList.add('selected');
                 
-                // Update hidden input
                 if (parent.parentElement.querySelector('h2').textContent === 'Time Range') {
                     document.getElementById('time_range').value = this.dataset.value;
                 } else {

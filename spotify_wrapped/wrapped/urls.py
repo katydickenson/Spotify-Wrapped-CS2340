@@ -17,4 +17,5 @@ urlpatterns = [
     path('get-friends/', views.get_friends, name='get_friends'),
     path('api/submit-feedback/', views.submit_feedback, name='submit_feedback'),
     path('wrapped-filters/', views.wrapped_filters, name='wrapped_filters'),
+    path('wrapped-results/', views.wrapped_results, name='wrapped_results'),
 ]

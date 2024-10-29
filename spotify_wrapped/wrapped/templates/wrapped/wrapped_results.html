@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Spotify Wrapped</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #282828;
+            --spotify-light-gray: #B3B3B3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--spotify-black);
+            color: white;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow-y: auto; 
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5rem;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0.2rem 0;
+            background: linear-gradient(to right, var(--spotify-green), #4eda7c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .time-period {
+            text-align: center;
+            color: var(--spotify-light-gray);
+            margin: 0 0 0.2rem 0;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .tracks-container {
+            position: relative;
+            height: 85vh;
+            height: calc(100vh - 100px);
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease;
+        }
+
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+            height: 100%;
+            padding-bottom: 10px; 
+        }
+
+        .track-card, .artist-card {
+            background-color: var(--spotify-dark-gray);
+            padding: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            height: calc(85vh / 5);
+            
+        }
+
+        .track-image-container {
+            position: relative;
+            height: 90%;
+            aspect-ratio: 1;
+            padding-bottom: 23px; 
+        }
+
+        .track-image {
+            width: 96%;
+            height: 96%;
+            object-fit: cover;
+        }
+
+        .artist-image {
+            width: 92%;
+            height: 92%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .track-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .track-number {
+            color: var(--spotify-green);
+            font-size: 0.8rem;
+            margin-bottom: 0.1rem;
+        }
+
+        .track-name-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .track-name {
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-artist, .artist-genres {
+            font-size: 0.75rem;
+            color: var(--spotify-light-gray);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .play-button {
+            background-color: var(--spotify-green);
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            background-color: #1ed760;
+        }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 8px;
+            border-color: transparent transparent transparent white;
+            margin-left: 1px;
+        }
+
+        .pause-icon {
+            width: 8px;
+            height: 10px;
+            border-left: 2px solid white;
+            border-right: 2px solid white;
+            display: none;
+        }
+
+        .genres-slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .genre-item {
+            margin: 1.5rem 0;
+            transition: transform 0.2s ease;
+        text-align: center;
+        }
+
+        .genre-item:hover {
+            transform: scale(1.1);
+        }
+
+        .genre-name {
+            font-size: 2rem;  /* All genres same size */
+            font-weight: bold;
+            background: linear-gradient(to right, var(--spotify-green), #4eda7c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .genre-rank {
+            font-size: 1.2rem;
+            color: var(--spotify-light-gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--spotify-green);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            z-index: 100;
+        }
+
+        .nav-arrow:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-arrow.prev {
+        left: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        }
+
+        .nav-arrow.prev.visible {
+        opacity: 1;
+        pointer-events: auto;
+        }
+
+        .nav-arrow.next {
+            right: 20px;
+        }
+
+        .nav-arrow svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .slide.tracks {
+            transform: translateX(0);
+            background-color: var(--spotify-black); /* Match background color */
+        }
+        
+        .slide.artists {
+            transform: translateX(100%);
+            background-color: var(--spotify-black); /* Match background color */
+        }
+        
+        .slide.genres {
+            transform: translateX(200%);
+            background-color: var(--spotify-black); /* Match background color */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>{{ user_name }}'s Top Songs</h1>
+        <div class="time-period">
+            {% if time_range == '1month' %}
+                Last Month
+            {% elif time_range == '6months' %}
+                Last 6 Months
+            {% else %}
+                Last Year
+            {% endif %}
+        </div>
+
+        <div class="tracks-container">
+            <div class="slide tracks">
+                <div class="tracks-grid">
+                    {% for track in tracks %}
+                    <div class="track-card">
+                        <div class="track-image-container">
+                            {% if track.image_url %}
+                                <img src="{{ track.image_url }}" alt="{{ track.name }}" class="track-image">
+                            {% endif %}
+                        </div>
+                        <div class="track-info">
+                            <div class="track-number">#{{ forloop.counter }}</div>
+                            <div class="track-name-container">
+                                <div class="track-name">{{ track.name }}</div>
+                                {% if track.preview_url %}
+                                <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
+                                    <div class="play-icon"></div>
+                                    <div class="pause-icon"></div>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="track-artist">{{ track.artist }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="slide artists">
+                <div class="tracks-grid">
+                    {% for artist in artists %}
+                    <div class="artist-card">
+                        <div class="track-image-container">
+                            {% if artist.image_url %}
+                                <img src="{{ artist.image_url }}" alt="{{ artist.name }}" class="artist-image">
+                            {% endif %}
+                        </div>
+                        <div class="track-info">
+                            <div class="track-number">#{{ forloop.counter }}</div>
+                            <div class="track-name">{{ artist.name }}</div>
+                            <div class="artist-genres">{{ artist.genres }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="slide genres">
+                <div class="genres-container">
+                    {% for genre in genres %}
+                    <div class="genre-item">
+                        <div class="genre-rank">#{{ forloop.counter }}</div>
+                        <div class="genre-name">{{ genre.name }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <button class="nav-arrow prev" onclick="prevSlide()">
+            <svg viewBox="0 0 24 24">
+                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+        </button>
+        <button class="nav-arrow next" onclick="nextSlide()">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        let currentSlide = 'tracks';
+        let currentAudio = null;
+        let currentButton = null;
+
+        function updateSlides(newSlide) {
+            const slides = {
+                tracks: 0,
+                artists: 1,
+                genres: 2
+            };
+
+            const slideElements = document.querySelectorAll('.slide');
+            slideElements.forEach((slide, index) => {
+                slide.style.transform = `translateX(${(index - slides[newSlide]) * 100}%)`;
+            });
+
+            const title = document.querySelector('h1');
+            title.textContent = `{{ user_name }}'s Top ${newSlide.charAt(0).toUpperCase() + newSlide.slice(1)}`;
+            
+            const prevButton = document.querySelector('.nav-arrow.prev');
+            if (newSlide === 'tracks') {
+                prevButton.classList.remove('visible');
+            } else {
+                prevButton.classList.add('visible');
+            }
+            
+            currentSlide = newSlide;
+        }
+        function nextSlide() {
+            const order = ['tracks', 'artists', 'genres'];
+            const currentIndex = order.indexOf(currentSlide);
+            if (currentIndex < order.length - 1) {
+                updateSlides(order[currentIndex + 1]);
+            }
+        }
+
+        function prevSlide() {
+            const order = ['tracks', 'artists', 'genres'];
+            const currentIndex = order.indexOf(currentSlide);
+            if (currentIndex > 0) {
+                updateSlides(order[currentIndex - 1]);
+            }
+        }
+
+        function togglePlay(button, previewUrl) {
+            const playIcon = button.querySelector('.play-icon');
+            const pauseIcon = button.querySelector('.pause-icon');
+
+            if (currentAudio && currentAudio.src === previewUrl) {
+                if (currentAudio.paused) {
+                    currentAudio.play();
+                    playIcon.style.display = 'none';
+                    pauseIcon.style.display = 'block';
+                } else {
+                    currentAudio.pause();
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                }
+            } else {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    if (currentButton) {
+                        currentButton.querySelector('.play-icon').style.display = 'block';
+                        currentButton.querySelector('.pause-icon').style.display = 'none';
+                    }
+                }
+
+                currentAudio = new Audio(previewUrl);
+                currentButton = button;
+                currentAudio.play();
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+
+                currentAudio.onended = function() {
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                };
+            }
+        }
+    </script>
+</body>
+</html>
