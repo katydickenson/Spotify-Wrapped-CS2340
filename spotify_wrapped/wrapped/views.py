@@ -18,6 +18,7 @@ from .models import SpotifyUser, Feedback
 from django.http import JsonResponse
 from django.db.models import Q
 from django.urls import reverse
+from django.http import HttpResponseRedirect
 
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ def require_spotify_auth(view_func):
 
 
 def get_spotify_auth_manager(request):
-    scope = 'user-read-private user-read-email'
+    scope = 'user-read-private user-read-email user-top-read'
     state = f"st{request.session.session_key}"
 
     return SpotifyOAuth(
@@ -53,7 +54,7 @@ def get_spotify_auth_manager(request):
         client_secret=settings.SPOTIFY_CLIENT_SECRET,
         redirect_uri=settings.SPOTIFY_REDIRECT_URI,
         scope=scope,
-        cache_handler=None,  # Remove cache handler completely
+        cache_handler=None,
         show_dialog=True,
         state=state
     )
@@ -502,15 +503,83 @@ def addfriends(request):
     
 @require_spotify_auth
 def wrapped_filters(request):
+    if 'access_token' not in request.session:
+        return redirect('login')
+    
     if request.method == 'POST':
         time_range = request.POST.get('time_range')
-        holiday = request.POST.get('holiday')
-        # Add logic here to redirect to results page with these filters
-        return redirect('results_page')  # Create this URL name later
+        print(f"Time range selected: {time_range}")
+        
+        request.session['selected_time_range'] = time_range
+        
+        try:
+            return redirect(reverse('wrapped_results'))
+        except Exception as e:
+            print(f"Redirect error: {e}")
+            
     return render(request, 'wrapped/wrapped_filters.html')
+
+@require_spotify_auth
+def wrapped_results(request):
+    if 'access_token' not in request.session:
+        return redirect('login')
+        
+    spotify = spotipy.Spotify(auth=request.session['access_token'])
     
+    time_range = request.session.get('selected_time_range', '1month')
+    spotify_time_range = {
+        '1month': 'short_term',
+        '6months': 'medium_term',
+        '1year': 'long_term'
+    }.get(time_range, 'medium_term')
+
+    top_tracks = spotify.current_user_top_tracks(
+        limit=10,
+        offset=0,
+        time_range=spotify_time_range
+    )
     
+    top_artists = spotify.current_user_top_artists(
+        limit=10,
+        offset=0,
+        time_range=spotify_time_range
+    )
+    
+    tracks_data = []
+    for track in top_tracks['items']:
+        tracks_data.append({
+            'name': track['name'],
+            'artist': track['artists'][0]['name'],
+            'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
+            'preview_url': track['preview_url']
+        })
 
+    artists_data = []
+    for artist in top_artists['items']:
+        artists_data.append({
+            'name': artist['name'],
+            'image_url': artist['images'][0]['url'] if artist['images'] else None,
+            'genres': ', '.join(artist['genres'][:2]) if artist['genres'] else ''
+        })
 
+    genre_count = {}
+    for artist in top_artists['items']:
+        for genre in artist['genres']:
+            genre_count[genre] = genre_count.get(genre, 0) + 1
+    
+    top_genres = sorted(genre_count.items(), key=lambda x: x[1], reverse=True)[:5]
+    formatted_genres = []
+    for genre, count in top_genres:
+        formatted_name = ' '.join(word.capitalize() for word in genre.replace('-', ' ').split())
+        formatted_genres.append({
+            'name': formatted_name,
+            'count': count
+        })
 
-
+    return render(request, 'wrapped/wrapped_results.html', {
+        'tracks': tracks_data,
+        'artists': artists_data,
+        'genres': formatted_genres,
+        'time_range': time_range,
+        'user_name': spotify.me()['display_name']
+    })
