@@ -18,4 +18,8 @@ urlpatterns = [
     path('api/submit-feedback/', views.submit_feedback, name='submit_feedback'),
     path('wrapped-filters/', views.wrapped_filters, name='wrapped_filters'),
     path('wrapped-results/', views.wrapped_results, name='wrapped_results'),
+    path('past-spotify-wraps/', views.past_spotify_wraps, name='past_spotify_wraps'),
+    path('view-saved-wrap/<int:wrap_id>/', views.view_saved_wrap, name='view_saved_wrap'),
+    path('delete-wrap/<int:wrap_id>/', views.delete_wrap, name='delete_wrap'),
+    path('delete-all-wraps/', views.delete_all_wraps, name='delete_all_wraps'),
 ]
