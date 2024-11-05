@@ -14,7 +14,7 @@ from django.views.decorators.http import require_http_methods
 from spotipy.oauth2 import SpotifyOAuth
 from functools import wraps
 from django.contrib import messages
-from .models import SpotifyUser, Feedback
+from .models import SpotifyUser, Feedback, SavedWrap
 from django.http import JsonResponse
 from django.db.models import Q
 from django.urls import reverse
@@ -64,7 +64,6 @@ def home(request):
     user_profile = spotify.me()
     user_name = spotify.me().get('display_name', 'User')
 
-    # Get profile image URL (get the first image if available)
     profile_image = None
     if user_profile.get('images') and len(user_profile['images']) > 0:
         profile_image = user_profile['images'][0]['url']
@@ -76,7 +75,6 @@ def home(request):
 
 
 def login(request):
-    # Clear only Spotify-related cache
     spotify_keys = ['spotify_auth_cache', 'spotify_id', 'access_token',
                     'spotify_auth_state']
     for key in spotify_keys:
@@ -91,14 +89,12 @@ def initiate_spotify_auth(request):
     request.session.flush()
     request.session.create()
 
-    # Ensure session key exists
     if not request.session.session_key:
         request.session.create()
 
     auth_manager = get_spotify_auth_manager(request)
     auth_url = auth_manager.get_authorize_url()
 
-    # Store state in session
     request.session['spotify_auth_state'] = auth_manager.state
     request.session.modified = True
 
@@ -115,7 +111,6 @@ def spotify_callback(request):
     code = request.GET.get('code')
     state = request.GET.get('state')
 
-    # Add debug logging
     logger.debug(f"Received state: {state}")
     logger.debug(f"Session state: {request.session.get('spotify_auth_state')}")
 
@@ -125,10 +120,8 @@ def spotify_callback(request):
 
     try:
         auth_manager = get_spotify_auth_manager(request)
-        # Fix: Remove the [1] index and properly get the token info
         token_info = auth_manager.get_access_token(code, check_cache=False)
 
-        # Add debug logging
         logger.debug(f"Token info received: {bool(token_info)}")
 
         access_token = token_info.get('access_token')
@@ -136,14 +129,12 @@ def spotify_callback(request):
             logger.error("No access token in token_info")
             raise ValueError("No access token returned")
 
-        # Store token info in session
         request.session['access_token'] = access_token
         request.session['refresh_token'] = token_info.get('refresh_token')
         request.session['token_expires_at'] = token_info.get('expires_at')
         request.session['spotify_auth_state'] = None
         request.session.modified = True
 
-        # Test token immediately
         spotify = spotipy.Spotify(auth=access_token)
         spotify_user = spotify.me()
         spotify_id = spotify_user.get('id')
@@ -169,13 +160,11 @@ def spotify_callback(request):
 
 
 def logout(request):
-    # Clear only Spotify-related session data
     spotify_keys = ['spotify_auth_cache', 'spotify_id', 'access_token',
                     'spotify_auth_state']
     for key in spotify_keys:
         request.session.pop(key, None)
 
-    # Don't flush entire session to preserve admin login
     request.session.modified = True
     return redirect('login')
 
@@ -189,7 +178,6 @@ def contactus(request):
         user_name = user_profile.get('display_name', 'User')
         spotify_id = user_profile.get('id')
 
-        # Get profile image URL
         profile_image = None
         if user_profile.get('images') and len(user_profile['images']) > 0:
             profile_image = user_profile['images'][0]['url']
@@ -213,13 +201,11 @@ def addfriends(request):
         user_name = user_profile.get('display_name', 'User')
         spotify_id = user_profile.get('id')
 
-        # Debug: Print all users in database
         all_users = SpotifyUser.objects.all()
         logger.debug(f"Total users in database: {all_users.count()}")
         for user in all_users:
             logger.debug(f"User in DB: {user.spotify_id} - {user.user_name}")
 
-        # Get profile image URL
         profile_image = None
         if user_profile.get('images') and len(user_profile['images']) > 0:
             profile_image = user_profile['images'][0]['url']
@@ -242,17 +228,13 @@ def delete_account(request):
 
         if spotify_id:
             try:
-                # Explicitly get and delete only the SpotifyUser object
                 spotify_user = SpotifyUser.objects.get(spotify_id=spotify_id)
 
-                # Log the user details before deletion (for debugging)
                 logger.info(
                     f"Deleting SpotifyUser: {spotify_user.user_name} (ID: {spotify_user.spotify_id})")
 
-                # Delete only this specific SpotifyUser
                 spotify_user.delete()
 
-                # Clear only the Spotify-related session data
                 for key in list(request.session.keys()):
                     if key in ['spotify_id', 'access_token']:
                         del request.session[key]
@@ -500,23 +482,19 @@ def addfriends(request):
     except Exception as e:
         logger.error(f"Error in addfriends view: {str(e)}")
         return redirect('login')
+
     
-@require_spotify_auth
 def wrapped_filters(request):
-    if 'access_token' not in request.session:
-        return redirect('login')
-    
     if request.method == 'POST':
         time_range = request.POST.get('time_range')
-        print(f"Time range selected: {time_range}")
+        holiday_theme = request.POST.get('holiday_theme')
+        wrapped_name = request.POST.get('wrapped_name')
+
         
         request.session['selected_time_range'] = time_range
-        
-        try:
-            return redirect(reverse('wrapped_results'))
-        except Exception as e:
-            print(f"Redirect error: {e}")
-            
+        request.session['holiday_theme'] = holiday_theme
+        request.session['wrapped_name'] = wrapped_name
+        return redirect('wrapped_results')
     return render(request, 'wrapped/wrapped_filters.html')
 
 @require_spotify_auth
@@ -525,61 +503,198 @@ def wrapped_results(request):
         return redirect('login')
         
     spotify = spotipy.Spotify(auth=request.session['access_token'])
+    user_profile = spotify.me()
+    spotify_id = user_profile['id']
+    spotify_user, created = SpotifyUser.objects.get_or_create(
+        spotify_id=spotify_id,
+        defaults={'user_name': user_profile.get('display_name', 'User')}
+    )
     
     time_range = request.session.get('selected_time_range', '1month')
+    holiday_theme = request.session.get('holiday_theme') 
+    
     spotify_time_range = {
         '1month': 'short_term',
         '6months': 'medium_term',
         '1year': 'long_term'
     }.get(time_range, 'medium_term')
 
+    # Get all tracks first
     top_tracks = spotify.current_user_top_tracks(
-        limit=10,
-        offset=0,
-        time_range=spotify_time_range
-    )
-    
-    top_artists = spotify.current_user_top_artists(
-        limit=10,
+        limit=50,  
         offset=0,
         time_range=spotify_time_range
     )
     
     tracks_data = []
+    love_keywords = ['love', 'heart', 'valentine', 'romance', 'romantic', 
+                    'kiss', 'lover', 'beloved', 'darling', 'sweet', 
+                    'passion', 'cupid', 'crush', 'date']
+    christmas_keywords = ['christmas', 'santa', 'holiday', 'noel', 'xmas', 'navidad', 'jingle',
+                         'bells', 'hanukkah', 'train', 'jesus', 
+                         'dreidel', 'joy', 'snow', 'ye', 'hallelujah']
+    
+    # Process tracks based on theme
     for track in top_tracks['items']:
-        tracks_data.append({
+        track_name = track['name'].lower()
+        track_data = {
             'name': track['name'],
             'artist': track['artists'][0]['name'],
             'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
             'preview_url': track['preview_url']
-        })
+        }
 
+        if holiday_theme == 'december_break':
+            if any(keyword in track_name for keyword in christmas_keywords):
+                tracks_data.append(track_data)
+        elif holiday_theme == 'valentines':  # Changed from valentines_day to valentines
+            if any(keyword in track_name for keyword in love_keywords):
+                tracks_data.append(track_data)
+        else:
+            tracks_data.append(track_data)
+
+        if len(tracks_data) >= 10:
+            break
+
+    # Get artists
+    top_artists = spotify.current_user_top_artists(
+        limit=50,
+        offset=0,
+        time_range=spotify_time_range
+    )
+    
     artists_data = []
+    themed_artists_data = []
+    
     for artist in top_artists['items']:
-        artists_data.append({
+        artist_data = {
             'name': artist['name'],
             'image_url': artist['images'][0]['url'] if artist['images'] else None,
-            'genres': ', '.join(artist['genres'][:2]) if artist['genres'] else ''
-        })
+            'genres': artist['genres']
+        }
+        
+        # Check for themed artists
+        if holiday_theme == 'december_break':
+            is_themed = any('christmas' in genre.lower() or 'christian' in genre.lower() 
+                          for genre in artist_data['genres'])
+        elif holiday_theme == 'valentines':
+            is_themed = any('love' in genre.lower() or 'romance' in genre.lower() 
+                          for genre in artist_data['genres'])
+        else:
+            is_themed = False
+        
+        if holiday_theme in ['december_break', 'valentines'] and is_themed:
+            themed_artists_data.append(artist_data)
+        elif holiday_theme not in ['december_break', 'valentines']:
+            artists_data.append(artist_data)
+            
+        if len(artists_data if holiday_theme not in ['december_break', 'valentines'] 
+              else themed_artists_data) >= 10:
+            break
 
+    # Process genres
     genre_count = {}
-    for artist in top_artists['items']:
-        for genre in artist['genres']:
-            genre_count[genre] = genre_count.get(genre, 0) + 1
+    artist_list = themed_artists_data if holiday_theme in ['december_break', 'valentines'] else artists_data
     
+    for artist in artist_list:
+        for genre in artist['genres']:
+            genre_lower = genre.lower()
+            if holiday_theme == 'december_break':
+                if 'christmas' in genre_lower or 'christian' in genre_lower:
+                    genre_count[genre] = genre_count.get(genre, 0) + 1
+            elif holiday_theme == 'valentines':
+                if 'love' in genre_lower or 'romance' in genre_lower:
+                    genre_count[genre] = genre_count.get(genre, 0) + 1
+            else:
+                genre_count[genre] = genre_count.get(genre, 0) + 1
+
+    # Format genres
     top_genres = sorted(genre_count.items(), key=lambda x: x[1], reverse=True)[:5]
-    formatted_genres = []
-    for genre, count in top_genres:
-        formatted_name = ' '.join(word.capitalize() for word in genre.replace('-', ' ').split())
-        formatted_genres.append({
-            'name': formatted_name,
+    formatted_genres = [
+        {
+            'name': ' '.join(word.capitalize() for word in genre.replace('-', ' ').split()),
             'count': count
-        })
+        } for genre, count in top_genres
+    ]
+
+    # Save wrap
+    wrap = SavedWrap.objects.create(
+        user=spotify_user,
+        title=request.session.get('wrapped_name', 'My Wrap'),
+        tracks_data=tracks_data,
+        artists_data=artist_list,  # Use the themed or regular artist list
+        genres_data=formatted_genres,
+        time_range=time_range,
+        holiday_theme=holiday_theme
+    )
 
     return render(request, 'wrapped/wrapped_results.html', {
         'tracks': tracks_data,
-        'artists': artists_data,
+        'artists': artist_list,
         'genres': formatted_genres,
         'time_range': time_range,
-        'user_name': spotify.me()['display_name']
+        'holiday_theme': holiday_theme,
+        'user_name': user_profile['display_name'],
+        'wrapped_name': request.session.get('wrapped_name', '')
     })
+
+@require_spotify_auth
+def past_spotify_wraps(request):
+    try:
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        spotify_id = spotify.me()['id']
+        spotify_user = SpotifyUser.objects.get(spotify_id=spotify_id)
+        
+        print(f"Looking for wraps for user: {spotify_id}")
+        wraps = SavedWrap.objects.filter(user=spotify_user).order_by('-created_at')
+        print(f"Found {wraps.count()} wraps")
+        
+        return render(request, 'wrapped/past_spotify_wraps.html', {
+            'wraps': wraps,
+            'user_name': spotify_user.user_name,
+            'profile_image': spotify.me()['images'][0]['url'] if spotify.me()['images'] else None,
+        })
+    except Exception as e:
+        print(f"Error in past_spotify_wraps: {str(e)}")
+        return redirect('login')
+
+@require_spotify_auth
+def view_saved_wrap(request, wrap_id):
+    try:
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        spotify_id = spotify.me()['id']
+        spotify_user = SpotifyUser.objects.get(spotify_id=spotify_id)
+        
+        wrap = get_object_or_404(SavedWrap, id=wrap_id, user=spotify_user)
+        
+        return render(request, 'wrapped/view_saved_wrap.html', {
+            'wrap': wrap,
+            'user_name': spotify_user.user_name,
+            'profile_image': spotify.me()['images'][0]['url'] if spotify.me()['images'] else None,
+        })
+    except Exception as e:
+        logger.error(f"Error viewing saved wrap: {str(e)}")
+        return redirect('past_spotify_wraps')
+    
+@require_spotify_auth
+def delete_wrap(request, wrap_id):
+    if request.method == 'POST':
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        spotify_id = spotify.me()['id']
+        spotify_user = SpotifyUser.objects.get(spotify_id=spotify_id)
+        
+        wrap = get_object_or_404(SavedWrap, id=wrap_id, user=spotify_user)
+        wrap.delete()
+    
+    return redirect('past_spotify_wraps')
+
+@require_spotify_auth
+def delete_all_wraps(request):
+    if request.method == 'POST':
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        spotify_id = spotify.me()['id']
+        spotify_user = SpotifyUser.objects.get(spotify_id=spotify_id)
+        
+        SavedWrap.objects.filter(user=spotify_user).delete()
+    
+    return redirect('past_spotify_wraps')

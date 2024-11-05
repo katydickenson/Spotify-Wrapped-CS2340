@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Wrap</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #282828;
+            --spotify-light-gray: #B3B3B3;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--spotify-black);
+            color: white;
+            min-height: 100vh;
+        }
+
+        main {
+            padding: 8rem 2rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            color: var(--spotify-green);
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--spotify-dark-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card img {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .card-title {
+            color: white;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .card-text {
+            color: var(--spotify-light-gray);
+        }
+
+        .genres-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .genre-item {
+            background: var(--spotify-dark-gray);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: var(--spotify-green);
+            color: white;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            margin-top: 2rem;
+        }
+
+        .back-button:hover {
+            background: #1ed760;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>{{ wrap.title }}</h1>
+        <p>Created: {{ wrap.created_at|date:"M d, Y" }}</p>
+
+        <!-- Top Tracks Section -->
+        <div class="section">
+            <h2>Top Tracks</h2>
+            <div class="row">
+                {% for track in wrap.tracks_data %}
+                <div class="card">
+                    {% if track.image_url %}
+                    <img src="{{ track.image_url }}" alt="{{ track.name }}">
+                    {% endif %}
+                    <h3 class="card-title">{{ track.name }}</h3>
+                    <p class="card-text">{{ track.artist }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Artists Section -->
+        <div class="section">
+            <h2>Top Artists</h2>
+            <div class="row">
+                {% for artist in wrap.artists_data %}
+                <div class="card">
+                    {% if artist.image_url %}
+                    <img src="{{ artist.image_url }}" alt="{{ artist.name }}">
+                    {% endif %}
+                    <h3 class="card-title">{{ artist.name }}</h3>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Genres Section -->
+        <div class="section">
+            <h2>Top Genres</h2>
+            <ul class="genres-list">
+                {% for genre in wrap.genres_data %}
+                <li class="genre-item">{{ genre.name }} ({{ genre.count }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <a href="{% url 'past_spotify_wraps' %}" class="back-button">Back to Past Wraps</a>
+    </main>
+</body>
+</html>

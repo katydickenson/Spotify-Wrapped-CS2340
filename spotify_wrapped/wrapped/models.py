@@ -77,3 +77,16 @@ class Feedback(models.Model):
         self.admin_response_at = timezone.now()
         self.admin = admin_user
         self.save()
+
+class SavedWrap(models.Model):
+    user = models.ForeignKey(SpotifyUser, on_delete=models.CASCADE, related_name='saved_wraps')
+    title = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    tracks_data = models.JSONField()
+    artists_data = models.JSONField()
+    genres_data = models.JSONField()
+    time_range = models.CharField(max_length=50)
+    holiday_theme = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
