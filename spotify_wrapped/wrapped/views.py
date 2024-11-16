@@ -169,7 +169,25 @@ def logout(request):
     return redirect('login')
 
 def settingshome(request):
-    return render(request, 'wrapped/settingsHome.html')
+    try:
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        user_profile = spotify.me()
+        user_name = user_profile.get('display_name', 'User')
+        spotify_id = user_profile.get('id')
+
+        profile_image = None
+        if user_profile.get('images') and len(user_profile['images']) > 0:
+            profile_image = user_profile['images'][0]['url']
+
+        return render(request, 'wrapped/settingsHome.html', {
+            'user_name': user_name,
+            'profile_image': profile_image,
+            'spotify_id': spotify_id,
+        })
+
+    except Exception as e:
+        logger.error(f"Error in addfriends view: {str(e)}")
+        return redirect('home')
 
 def contactus(request):
     try:
@@ -485,17 +503,34 @@ def addfriends(request):
 
     
 def wrapped_filters(request):
-    if request.method == 'POST':
-        time_range = request.POST.get('time_range')
-        holiday_theme = request.POST.get('holiday_theme')
-        wrapped_name = request.POST.get('wrapped_name')
+    try:
+        if request.method == 'POST':
+            time_range = request.POST.get('time_range')
+            holiday_theme = request.POST.get('holiday_theme')
+            wrapped_name = request.POST.get('wrapped_name')
 
-        
-        request.session['selected_time_range'] = time_range
-        request.session['holiday_theme'] = holiday_theme
-        request.session['wrapped_name'] = wrapped_name
-        return redirect('wrapped_results')
-    return render(request, 'wrapped/wrapped_filters.html')
+            request.session['selected_time_range'] = time_range
+            request.session['holiday_theme'] = holiday_theme
+            request.session['wrapped_name'] = wrapped_name
+            return redirect('wrapped_results')
+
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        user_profile = spotify.me()
+        user_name = user_profile.get('display_name', 'User')
+        spotify_id = user_profile.get('id')
+
+        profile_image = None
+        if user_profile.get('images') and len(user_profile['images']) > 0:
+            profile_image = user_profile['images'][0]['url']
+
+        return render(request, 'wrapped/wrapped_filters.html', {
+            'user_name': user_name,
+            'profile_image': profile_image,
+            'spotify_id': spotify_id,
+        })
+    except Exception as e:
+        logger.error(f"Error in addfriends view: {str(e)}")
+        return redirect('home')
 
 @require_spotify_auth
 def wrapped_results(request):
