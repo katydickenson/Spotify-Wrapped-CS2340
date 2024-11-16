@@ -302,19 +302,31 @@
             
         }
 
-        .logout-btn {
+        .back-button {
+            position: relative; /* Change from absolute to relative */
             background-color: transparent;
-            border: 1px solid white;
-            color: white;
-            padding: 0.5rem 1rem;
+            border: 1px solid var(--spotify-green);
+            color: var(--spotify-green);
+            padding: 0.5rem 1.5rem;
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            margin-left: auto; /* Add this to push it to the right */
+            margin-right: 1rem; /* Add some spacing from the right edge */
         }
-
-        .logout-btn:hover {
-            background-color: white;
-            color: var(--spotify-black);
+        
+        .back-button:hover {
+            background-color: var(--spotify-green);
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .back-arrow {
+            font-size: 1.2rem;
         }
 
         main {
@@ -518,8 +530,8 @@
             {% endif %}
             <span>{{ user_name }}</span>
         </div>
-        <a href="{% url 'logout' %}">
-            <button class="logout-btn">Logout</button>
+         <a href="{% url 'home' %}" class="back-button">
+            <span class="back-arrow">←</span> Back
         </a>
     </nav>
 
