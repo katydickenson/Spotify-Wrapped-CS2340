@@ -25,6 +25,34 @@
             color: white;
             min-height: 100vh;
         }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--spotify-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            overflow: hidden; /* Add this to ensure the image stays within the circle */
+        }
+        .user-avatar img {
+        width: 100%;
+        height: 100%;object-fit: cover; /* This ensures the image covers the entire space properly */
+            
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         .navbar {
             background-color: rgba(0, 0, 0, 0.3);
@@ -40,16 +68,30 @@
         }
 
         .back-button {
-            color: var(--spotify-light-gray);
-            text-decoration: none;
+            position: relative; /* Change from absolute to relative */
+            background-color: transparent;
+            border: 1px solid var(--spotify-green);
+            color: var(--spotify-green);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            transition: color 0.3s ease;
+            font-size: 1rem;
+            margin-left: auto; /* Add this to push it to the right */
+            margin-right: 1rem; /* Add some spacing from the right edge */
         }
-
+        
         .back-button:hover {
+            background-color: var(--spotify-green);
             color: white;
+            transform: translateX(-5px);
+        }
+        
+        .back-arrow {
+            font-size: 1.2rem;
         }
 
         .page-title {
@@ -165,11 +207,19 @@
 </head>
 <body>
     <nav class="navbar">
+        <div class="user-info">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="{{ user_name }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar">
+                    {{ user_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <span>{{ user_name }}</span>
+        </div>
         <a href="{% url 'home' %}" class="back-button">
-            ← Back to Dashboard
+            <span class="back-arrow">←</span> Back
         </a>
-        <div class="page-title">Settings</div>
-        <div style="width: 80px;"><!-- Spacer for flex alignment --></div>
     </nav>
 
     <main>

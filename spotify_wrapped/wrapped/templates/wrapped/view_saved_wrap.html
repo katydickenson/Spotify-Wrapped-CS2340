@@ -75,8 +75,76 @@
             margin-bottom: 0.5rem;
             border-radius: 4px;
         }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--spotify-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            overflow: hidden; /* Add this to ensure the image stays within the circle */
+        }
+        .user-avatar img {
+        width: 100%;
+        height: 100%;object-fit: cover; /* This ensures the image covers the entire space properly */
+            
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
 
+        /* Update the back button CSS */
         .back-button {
+            position: relative; /* Change from absolute to relative */
+            background-color: transparent;
+            border: 1px solid var(--spotify-green);
+            color: var(--spotify-green);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            margin-left: auto; /* Add this to push it to the right */
+            margin-right: 1rem; /* Add some spacing from the right edge */
+        }
+        
+        .back-button:hover {
+            background-color: var(--spotify-green);
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .back-arrow {
+            font-size: 1.2rem;
+        }
+        
+        .back-button2 {
             display: inline-block;
             background: var(--spotify-green);
             color: white;
@@ -86,12 +154,27 @@
             margin-top: 2rem;
         }
 
-        .back-button:hover {
+        .back-button2:hover {
             background: #1ed760;
         }
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="user-info">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="{{ user_name }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar">
+                    {{ user_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <span>{{ user_name }}</span>
+        </div>
+        <a href="{% url 'home' %}" class="back-button">
+            <span class="back-arrow">←</span> Back
+        </a>
+    </nav>
     <main>
         <h1>{{ wrap.title }}</h1>
         <p>Created: {{ wrap.created_at|date:"M d, Y" }}</p>
@@ -137,7 +220,7 @@
             </ul>
         </div>
 
-        <a href="{% url 'past_spotify_wraps' %}" class="back-button">Back to Past Wraps</a>
+        <a href="{% url 'past_spotify_wraps' %}" class="back-button2">Back to Past Wraps</a>
     </main>
 </body>
 </html>
