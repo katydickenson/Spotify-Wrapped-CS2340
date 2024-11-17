@@ -556,40 +556,78 @@ def wrapped_results(request):
 
     # Get all tracks first
     top_tracks = spotify.current_user_top_tracks(
-        limit=50,  
+        limit=50,
         offset=0,
-        time_range=spotify_time_range
+        time_range=spotify_time_range,
     )
     
     tracks_data = []
-    love_keywords = ['love', 'heart', 'valentine', 'romance', 'romantic', 
-                    'kiss', 'lover', 'beloved', 'darling', 'sweet', 
-                    'passion', 'cupid', 'crush', 'date']
-    christmas_keywords = ['christmas', 'santa', 'holiday', 'noel', 'xmas', 'navidad', 'jingle',
-                         'bells', 'hanukkah', 'train', 'jesus', 
-                         'dreidel', 'joy', 'snow', 'ye', 'hallelujah']
-    
+    genre_dict = {}
+    genre_dict['december_break_genres'] = ['holidays', 'gospel', 'children','disney', 'jazz']
+    genre_dict['valentines_genres'] = ['romance', 'r-n-b', 'soul', 'singer-songwriter', 'pop']
+    genre_dict['fourth_genres'] = ['rock', 'country', 'pop', 'dance', 'party']
+    genre_dict['december_break_genres_broad'] = ['classical', 'piano', 'singer', 'singer-songwriter', 'pop', 'folk']
+    genre_dict['valentines_genres_broad'] = ['jazz', 'acoustic', 'latin', 'piano', 'indie-pop']
+    genre_dict['fourth_genres_broad'] = ['indie', 'funk', 'disco', 'blues', 'folk']
+
+
     # Process tracks based on theme
-    for track in top_tracks['items']:
-        track_name = track['name'].lower()
-        track_data = {
-            'name': track['name'],
-            'artist': track['artists'][0]['name'],
-            'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
-            'preview_url': track['preview_url']
-        }
+    if holiday_theme != 'none':
+        curr_genres = genre_dict[holiday_theme + "_genres"]
+        for track in top_tracks['items']:
+            track_data = {
+                'name': track['name'],
+                'artist': track['artists'][0]['name'],
+                'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
+                'preview_url': track['preview_url']
+            }
+            artist_id = track['artists'][0]['id']
+            artist_info = spotify.artist(artist_id)
+            artist_genres = artist_info['genres']
+            check = False
+            for genre in artist_genres:
+                if genre in curr_genres:
+                    check = True
+                    break
+            if check:
+                tracks_data.append(track_data)
+            if len(tracks_data) >= 10:
+                break
 
-        if holiday_theme == 'december_break':
-            if any(keyword in track_name for keyword in christmas_keywords):
-                tracks_data.append(track_data)
-        elif holiday_theme == 'valentines':  # Changed from valentines_day to valentines
-            if any(keyword in track_name for keyword in love_keywords):
-                tracks_data.append(track_data)
-        else:
+        if len(tracks_data) == 0:
+            curr_genres = genre_dict[holiday_theme + "_genres_broad"]
+            for track in top_tracks['items']:
+                track_data = {
+                    'name': track['name'],
+                    'artist': track['artists'][0]['name'],
+                    'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
+                    'preview_url': track['preview_url']
+                }
+                artist_id = track['artists'][0]['id']
+                artist_info = spotify.artist(artist_id)
+                artist_genres = artist_info['genres']
+                check = False
+                for genre in artist_genres:
+                    if genre in curr_genres:
+                        check = True
+                        break
+                if check:
+                    print("check2")
+                    tracks_data.append(track_data)
+                if len(tracks_data) >= 10:
+                    break
+    else:
+        for track in top_tracks['items']:
+            track_data = {
+                'name': track['name'],
+                'artist': track['artists'][0]['name'],
+                'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
+                'preview_url': track['preview_url']
+            }
+            print("check3")
             tracks_data.append(track_data)
-
-        if len(tracks_data) >= 10:
-            break
+            if len(tracks_data) >= 10:
+                break
 
     # Get artists
     top_artists = spotify.current_user_top_artists(
@@ -599,49 +637,61 @@ def wrapped_results(request):
     )
     
     artists_data = []
-    themed_artists_data = []
-    
-    for artist in top_artists['items']:
-        artist_data = {
-            'name': artist['name'],
-            'image_url': artist['images'][0]['url'] if artist['images'] else None,
-            'genres': artist['genres']
-        }
-        
-        # Check for themed artists
-        if holiday_theme == 'december_break':
-            is_themed = any('christmas' in genre.lower() or 'christian' in genre.lower() 
-                          for genre in artist_data['genres'])
-        elif holiday_theme == 'valentines':
-            is_themed = any('love' in genre.lower() or 'romance' in genre.lower() 
-                          for genre in artist_data['genres'])
-        else:
-            is_themed = False
-        
-        if holiday_theme in ['december_break', 'valentines'] and is_themed:
-            themed_artists_data.append(artist_data)
-        elif holiday_theme not in ['december_break', 'valentines']:
-            artists_data.append(artist_data)
-            
-        if len(artists_data if holiday_theme not in ['december_break', 'valentines'] 
-              else themed_artists_data) >= 10:
-            break
-
-    # Process genres
     genre_count = {}
-    artist_list = themed_artists_data if holiday_theme in ['december_break', 'valentines'] else artists_data
-    
-    for artist in artist_list:
-        for genre in artist['genres']:
-            genre_lower = genre.lower()
-            if holiday_theme == 'december_break':
-                if 'christmas' in genre_lower or 'christian' in genre_lower:
+
+    if holiday_theme != 'none':
+        curr_genres = genre_dict[holiday_theme + "_genres"]
+        for artist in top_artists['items']:
+            genres = artist['genres']
+            artist_data = {
+                'name': artist['name'],
+                'image_url': artist['images'][0]['url'] if artist['images'] else None,
+                'genres': genres
+            }
+            check = False
+            for genre in genres:
+                if genre in curr_genres:
+                    check = True
                     genre_count[genre] = genre_count.get(genre, 0) + 1
-            elif holiday_theme == 'valentines':
-                if 'love' in genre_lower or 'romance' in genre_lower:
-                    genre_count[genre] = genre_count.get(genre, 0) + 1
-            else:
-                genre_count[genre] = genre_count.get(genre, 0) + 1
+                    break
+            if check:
+                artists_data.append(artist_data)
+            if len(artists_data) >= 10:
+                break
+
+        if len(artists_data) == 0:
+            curr_genres = genre_dict[holiday_theme + "_genres_broad"]
+            for artist in top_artists['items']:
+                genres = artist['genres']
+                artist_data = {
+                    'name': artist['name'],
+                    'image_url': artist['images'][0]['url'] if artist['images'] else None,
+                    'genres': genres
+                }
+                check = False
+                for genre in genres:
+                    if genre in curr_genres:
+                        check = True
+                        genre_count[genre] = genre_count.get(genre, 0) + 1
+                        break
+                if check:
+                    print("check5")
+                    artists_data.append(artist_data)
+                if len(tracks_data) >= 10:
+                    break
+    else:
+        for artist in top_artists['items']:
+            genres = artist['genres']
+            artist_data = {
+                'name': artist['name'],
+                'image_url': artist['images'][0]['url'] if artist['images'] else None,
+                'genres': genres
+            }
+            artists_data.append(artist_data)
+            genre_count[genres[0]] = genre_count.get(genres[0], 0) + 1
+
+            if len(artists_data) >= 10:
+                break
 
     # Format genres
     top_genres = sorted(genre_count.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -657,7 +707,7 @@ def wrapped_results(request):
         user=spotify_user,
         title=request.session.get('wrapped_name', 'My Wrap'),
         tracks_data=tracks_data,
-        artists_data=artist_list,  # Use the themed or regular artist list
+        artists_data=artists_data,  # Use the themed or regular artist list
         genres_data=formatted_genres,
         time_range=time_range,
         holiday_theme=holiday_theme
@@ -665,7 +715,7 @@ def wrapped_results(request):
 
     return render(request, 'wrapped/wrapped_results.html', {
         'tracks': tracks_data,
-        'artists': artist_list,
+        'artists': artists_data,
         'genres': formatted_genres,
         'time_range': time_range,
         'holiday_theme': holiday_theme,

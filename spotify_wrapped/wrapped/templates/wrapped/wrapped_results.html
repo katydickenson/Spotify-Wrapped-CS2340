@@ -406,7 +406,7 @@
                         <div class="track-info">
                             <div class="track-number">#{{ forloop.counter }}</div>
                             <div class="track-name">{{ artist.name }}</div>
-                            <div class="artist-genres">{{ artist.genres }}</div>
+                            <div class="artist-genres">{{ artist.genres|join:", "}}</div>
                         </div>
                     </div>
                     {% endfor %}
