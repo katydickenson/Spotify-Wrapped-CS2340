@@ -119,3 +119,4 @@ class SpotifyAuth(models.Model):
         self.save()
         
         return self.access_token
+    

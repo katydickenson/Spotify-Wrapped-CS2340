@@ -731,46 +731,44 @@ def duo_comparison(request, friend_id):
         current_user = SpotifyUser.objects.get(spotify_id=request.session.get('spotify_id'))
         current_user_spotify = spotipy.Spotify(auth=request.session['access_token'])
         
-        # Get friend's data
+        # Get current user's top tracks so that nxt page renders
+        user_top_tracks = current_user_spotify.current_user_top_tracks(
+                limit=5,
+                offset=0,
+                time_range='medium_term'
+            )['items']
+        
         try:
             friend = SpotifyUser.objects.get(spotify_id=friend_id)
-            friend_auth = SpotifyAuth.objects.get(user=friend)
             
-            # Check if friend's token needs refresh
-            if not friend_auth.is_token_valid():
-                logger.info(f"Refreshing token for friend: {friend.spotify_id}")
-                friend_auth.refresh_access_token()
+            # Even if friend auth doesn't exist, we'll still render the page
+            try:
+                friend_auth = SpotifyAuth.objects.get(user=friend)
+                if friend_auth.is_token_valid():
+                    friend_spotify = spotipy.Spotify(auth=friend_auth.access_token)
+                    friend_top_tracks = friend_spotify.current_user_top_tracks(
+                        limit=5,
+                        offset=0,
+                        time_range='medium_term'
+                    )['items']
+                else:
+                    friend_top_tracks = None
+            except SpotifyAuth.DoesNotExist:
+                friend_top_tracks = None
+                logger.info(f"Friend {friend_id} needs to authenticate")
             
-            # Get current user's top tracks
-            user_top_tracks = current_user_spotify.current_user_top_tracks(
-                limit=5,
-                offset=0,
-                time_range='medium_term'
-            )['items']
-            
-            # Get friend's top tracks using refreshed token
-            friend_spotify = spotipy.Spotify(auth=friend_auth.access_token)
-            friend_top_tracks = friend_spotify.current_user_top_tracks(
-                limit=5,
-                offset=0,
-                time_range='medium_term'
-            )['items']
-            
+            # Always render the page, with or without friend's tracks
             return render(request, 'wrapped/duo_comparison.html', {
                 'user': current_user,
                 'friend': friend,
                 'user_songs': user_top_tracks,
                 'friend_songs': friend_top_tracks,
-                'friend_needs_auth': False
+                'friend_needs_auth': friend_top_tracks is None,
+                'message': "Your friend needs to log in to enable comparison."
             })
             
         except SpotifyUser.DoesNotExist:
-            logger.error(f"Friend not found: {friend_id}")
             messages.error(request, "Friend not found.")
-            return redirect('duo_wrapped')
-        except SpotifyAuth.DoesNotExist:
-            logger.error(f"Friend auth not found for: {friend_id}")
-            messages.error(request, "Your friend needs to log in first.")
             return redirect('duo_wrapped')
             
     except Exception as e:

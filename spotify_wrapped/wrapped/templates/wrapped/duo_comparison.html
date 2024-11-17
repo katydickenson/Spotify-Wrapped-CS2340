@@ -125,6 +125,101 @@
             width: 100%;
             left: 0;
         }
+        .song-link {
+            color: white;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .song-link:hover {
+            color: var(--spotify-green);
+        }
+
+        .preview-player {
+            max-width: 200px;
+            height: 30px;
+            margin-left: 1rem;
+        }
+
+        .song-preview {
+            display: flex;
+            align-items: center;
+        }
+
+        audio::-webkit-media-controls-panel {
+            background-color: var(--spotify-dark-gray);
+        }
+
+        audio::-webkit-media-controls-play-button {
+            background-color: var(--spotify-green);
+            border-radius: 50%;
+        }
+
+        audio::-webkit-media-controls-timeline {
+            background-color: var(--spotify-light-gray);
+        }
+
+        .auth-needed {
+            text-align: center;
+            padding: 2rem;
+            color: var(--spotify-light-gray);
+        }
+
+        .share-link {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 1rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: white;
+        }
+
+        .copy-btn {
+            background: var(--spotify-green);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .play-button {
+            background-color: var(--spotify-green);
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+            margin-left: auto;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            background-color: #1ed760;
+        }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 8px;
+            border-color: transparent transparent transparent white;
+            margin-left: 1px;
+        }
+
+        .pause-icon {
+            width: 8px;
+            height: 10px;
+            border-left: 2px solid white;
+            border-right: 2px solid white;
+            display: none;
+        }
     </style>
 </head>
 <body class="spotify-theme">
@@ -152,6 +247,12 @@
                             <div class="song-title">{{ track.name }}</div>
                             <div class="song-artist">{{ track.artists.0.name }}</div>
                         </div>
+                        {% if track.preview_url %}
+                        <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
+                            <div class="play-icon"></div>
+                            <div class="pause-icon"></div>
+                        </button>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
@@ -164,6 +265,8 @@
                         <p>Share this link with them:</p>
                         <input type="text" readonly value="{{ request.scheme }}://{{ request.get_host }}" class="share-link">
                         <button onclick="copyLink()" class="copy-btn">Copy Link</button>
+                        <p>Or Click Here to Log in:</p>
+                        <a href="{% url 'login' %}" class="copy-btn" style="text-decoration: none; display: inline-block;">Log in</a>
                     </div>
                 {% else %}
                     <ul class="song-list">
@@ -175,38 +278,17 @@
                                 <div class="song-title">{{ track.name }}</div>
                                 <div class="song-artist">{{ track.artists.0.name }}</div>
                             </div>
+                            {% if track.preview_url %}
+                            <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
+                                <div class="play-icon"></div>
+                                <div class="pause-icon"></div>
+                            </button>
+                            {% endif %}
                         </li>
                         {% endfor %}
                     </ul>
                 {% endif %}
             </div>
-            
-            <style>
-            .auth-needed {
-                text-align: center;
-                padding: 2rem;
-                color: var(--spotify-light-gray);
-            }
-            
-            .share-link {
-                width: 100%;
-                padding: 0.5rem;
-                margin: 1rem 0;
-                background: rgba(255, 255, 255, 0.1);
-                border: none;
-                border-radius: 4px;
-                color: white;
-            }
-            
-            .copy-btn {
-                background: var(--spotify-green);
-                border: none;
-                padding: 0.5rem 1rem;
-                border-radius: 20px;
-                color: white;
-                cursor: pointer;
-            }
-            </style>
             
             <script>
             function copyLink() {
@@ -216,5 +298,45 @@
                 const btn = document.querySelector('.copy-btn');
                 btn.textContent = 'Copied!';
                 setTimeout(() => btn.textContent = 'Copy Link', 2000);
+            }
+            </script>
+            <script>
+            let currentAudio = null;
+            let currentButton = null;
+
+            function togglePlay(button, previewUrl) {
+                const playIcon = button.querySelector('.play-icon');
+                const pauseIcon = button.querySelector('.pause-icon');
+
+                if (currentAudio && currentAudio.src === previewUrl) {
+                    if (currentAudio.paused) {
+                        currentAudio.play();
+                        playIcon.style.display = 'none';
+                        pauseIcon.style.display = 'block';
+                    } else {
+                        currentAudio.pause();
+                        playIcon.style.display = 'block';
+                        pauseIcon.style.display = 'none';
+                    }
+                } else {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        if (currentButton) {
+                            currentButton.querySelector('.play-icon').style.display = 'block';
+                            currentButton.querySelector('.pause-icon').style.display = 'none';
+                        }
+                    }
+
+                    currentAudio = new Audio(previewUrl);
+                    currentButton = button;
+                    currentAudio.play();
+                    playIcon.style.display = 'none';
+                    pauseIcon.style.display = 'block';
+
+                    currentAudio.onended = function() {
+                        playIcon.style.display = 'block';
+                        pauseIcon.style.display = 'none';
+                    };
+                }
             }
             </script>
