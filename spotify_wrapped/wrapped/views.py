@@ -612,7 +612,6 @@ def wrapped_results(request):
                         check = True
                         break
                 if check:
-                    print("check2")
                     tracks_data.append(track_data)
                 if len(tracks_data) >= 10:
                     break
@@ -624,7 +623,6 @@ def wrapped_results(request):
                 'image_url': track['album']['images'][0]['url'] if track['album']['images'] else None,
                 'preview_url': track['preview_url']
             }
-            print("check3")
             tracks_data.append(track_data)
             if len(tracks_data) >= 10:
                 break
@@ -675,7 +673,6 @@ def wrapped_results(request):
                         genre_count[genre] = genre_count.get(genre, 0) + 1
                         break
                 if check:
-                    print("check5")
                     artists_data.append(artist_data)
                 if len(tracks_data) >= 10:
                     break
