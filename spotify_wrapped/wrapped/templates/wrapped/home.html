@@ -198,40 +198,30 @@
         </section>
 
         <div class="dashboard-grid">
-            
             <a href="{% url 'wrapped_filters' %}" class="dashboard-card">
                 <h3 class="card-title">Create a Spotify Wrapped</h3>
-                <p class="placeholder-text">Relive your year in music: 
-                    discover top songs, artists, and listening trends with a 
-                    personalized Spotify Wrapped experience.</p>
+                <p class="placeholder-text">Relive your year in music: discover top songs, artists, and listening trends with a personalized Spotify Wrapped experience.</p>
             </a>
-            <div class="dashboard-card">
+            <a href="{% url 'duo_wrapped' %}" class="dashboard-card">
                 <h3 class="card-title">Create a Duo-Wrapped</h3>
-                <p class="placeholder-text">Duo-Wrapped: Compare and contrast
-                    your music history with friends—discover shared top 
-                    songs, artists, and unique listening trends.</p>
-            </div>
+                <p class="placeholder-text">Duo-Wrapped: Compare and contrast your music history with friends—discover shared top songs, artists, and unique listening trends.</p>
+            </a>
             <a href="{% url 'past_spotify_wraps' %}" class="dashboard-card">
                 <h3 class="card-title">Past Spotify Wraps</h3>
-                <p class="placeholder-text">Your past spotify wraps will 
-                    appear here.</p>
+                <p class="placeholder-text">Your past Spotify wraps will appear here.</p>
             </a>
-            
-             <a href="{% url 'addFriends' %}" class="dashboard-card">
+            <a href="{% url 'addFriends' %}" class="dashboard-card">
                 <h3 class="card-title">Add Friends</h3>
-                <p class="placeholder-text">Add new friends to create Duo 
-                    Wraps!</p>
+                <p class="placeholder-text">Add new friends to create Duo Wraps!</p>
             </a>
-                <a href="{% url 'settingsHome' %}" class="dashboard-card">
+            <a href="{% url 'settingsHome' %}" class="dashboard-card">
                 <h3 class="card-title">Settings</h3>
-                <p class="placeholder-text">Settings allow you to customize
-                    their preferences and manage their accounts.</p>
-                </a>
+                <p class="placeholder-text">Settings allow you to customize their preferences and manage their accounts.</p>
+            </a>
             <a href="{% url 'contactUs' %}" class="dashboard-card">
                 <h3 class="card-title">Contact Us</h3>
-                <p class="placeholder-text">Click here to contact the 
-                    developers to suggest bug fixes, and new features!</p>
-                </a>
+                <p class="placeholder-text">Click here to contact the developers to suggest bug fixes, and new features!</p>
+            </a>
         </div>
     </main>
 </body>

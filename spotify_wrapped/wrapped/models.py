@@ -2,6 +2,8 @@ from django.db import models
 import logging
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.conf import settings
+from spotipy.oauth2 import SpotifyOAuth
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +14,10 @@ class SpotifyUser(models.Model):
     friends = models.ManyToManyField('self', symmetrical=False, blank=True)
     past_wraps = models.JSONField(default=list)
     last_spotify_wrapped = models.JSONField(default=dict)
+    email = models.EmailField(null=True, blank=True)
 
     def __str__(self):
-        return self.user_name
+        return f"{self.user_name} ({self.email})"
 
     def add_friend(self, friend_user):
         """Add a friend and ensure both users are connected"""
@@ -90,3 +93,30 @@ class SavedWrap(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class SpotifyAuth(models.Model):
+    user = models.OneToOneField(SpotifyUser, on_delete=models.CASCADE)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    token_expiry = models.DateTimeField()
+    
+    def is_token_valid(self):
+        return timezone.now() < self.token_expiry
+
+    
+    def refresh_access_token(self):
+        auth_manager = SpotifyOAuth(
+            client_id=settings.SPOTIFY_CLIENT_ID,
+            client_secret=settings.SPOTIFY_CLIENT_SECRET,
+            redirect_uri=settings.SPOTIFY_REDIRECT_URI,
+            scope='user-read-private user-read-email user-top-read'
+        )
+        
+        token_info = auth_manager.refresh_access_token(self.refresh_token)
+        
+        self.access_token = token_info['access_token']
+        self.token_expiry = timezone.now() + timezone.timedelta(seconds=token_info['expires_in'])
+        self.save()
+        
+        return self.access_token
+    

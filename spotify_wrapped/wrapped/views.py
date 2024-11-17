@@ -1,5 +1,3 @@
-import logging
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -19,6 +17,11 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+import logging
+from django.core.exceptions import ObjectDoesNotExist
+from .models import SpotifyAuth
+from datetime import timedelta
+from django.utils import timezone
 
 
 logger = logging.getLogger(__name__)
@@ -144,12 +147,19 @@ def spotify_callback(request):
 
         user, created = SpotifyUser.objects.get_or_create(
             spotify_id=spotify_id,
-            defaults={'user_name': user_name, 'past_wraps': []}
+            defaults={'user_name': user_name}
         )
 
-        if not created and user.user_name != user_name:
-            user.user_name = user_name
-            user.save()
+        auth, created = SpotifyAuth.objects.update_or_create(
+            user=user,
+            defaults={
+                'access_token': access_token,
+                'refresh_token': token_info.get('refresh_token'),
+                'token_expiry': timezone.now() + timedelta(seconds=token_info.get('expires_in', 3600))
+            }
+        )
+        logger.info(f"Saved auth token for user: {spotify_id}")
+        
 
         next_url = request.session.pop('next', 'home')
         return redirect(next_url)
@@ -363,7 +373,6 @@ def submit_feedback(request):
             'status': 'error',
             'message': str(e)
         }, status=400)
-@require_spotify_auth
 def add_friend(request):
     if request.method == 'POST':
         friend_id = request.POST.get('friend_id')
@@ -408,6 +417,7 @@ def add_friend(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+
 @csrf_exempt  # Add this decorator for search functionality
 @require_spotify_auth
 def search_users(request):
@@ -447,7 +457,7 @@ def search_users(request):
             'error': 'Search failed'
         }, status=500)
 
-
+    
 @require_spotify_auth
 def get_friends(request):
     try:
@@ -500,7 +510,6 @@ def addfriends(request):
     except Exception as e:
         logger.error(f"Error in addfriends view: {str(e)}")
         return redirect('login')
-
     
 def wrapped_filters(request):
     try:
@@ -733,3 +742,71 @@ def delete_all_wraps(request):
         SavedWrap.objects.filter(user=spotify_user).delete()
     
     return redirect('past_spotify_wraps')
+@require_spotify_auth
+def duo_wrapped(request):
+    try:
+        spotify = spotipy.Spotify(auth=request.session['access_token'])
+        current_user = SpotifyUser.objects.get(spotify_id=request.session.get('spotify_id'))
+
+        friends = current_user.friends.all()
+        
+        return render(request, 'wrapped/duo_wrapped.html', {
+            'friends': friends,
+            'user_name': spotify.me()['display_name'],
+            'profile_image': spotify.me()['images'][0]['url'] if spotify.me()['images'] else None,
+        })
+    except Exception as e:
+        logger.error(f"Error in duo_wrapped view: {str(e)}")
+        return redirect('home')
+
+@require_spotify_auth
+def duo_comparison(request, friend_id):
+    try:
+        # Get current user's Spotify client
+        current_user = SpotifyUser.objects.get(spotify_id=request.session.get('spotify_id'))
+        current_user_spotify = spotipy.Spotify(auth=request.session['access_token'])
+        
+        # Get current user's top tracks so that nxt page renders
+        user_top_tracks = current_user_spotify.current_user_top_tracks(
+                limit=5,
+                offset=0,
+                time_range='medium_term'
+            )['items']
+        
+        try:
+            friend = SpotifyUser.objects.get(spotify_id=friend_id)
+            
+            # Even if friend auth doesn't exist, we'll still render the page
+            try:
+                friend_auth = SpotifyAuth.objects.get(user=friend)
+                if friend_auth.is_token_valid():
+                    friend_spotify = spotipy.Spotify(auth=friend_auth.access_token)
+                    friend_top_tracks = friend_spotify.current_user_top_tracks(
+                        limit=5,
+                        offset=0,
+                        time_range='medium_term'
+                    )['items']
+                else:
+                    friend_top_tracks = None
+            except SpotifyAuth.DoesNotExist:
+                friend_top_tracks = None
+                logger.info(f"Friend {friend_id} needs to authenticate")
+            
+            # Always render the page, with or without friend's tracks
+            return render(request, 'wrapped/duo_comparison.html', {
+                'user': current_user,
+                'friend': friend,
+                'user_songs': user_top_tracks,
+                'friend_songs': friend_top_tracks,
+                'friend_needs_auth': friend_top_tracks is None,
+                'message': "Your friend needs to log in to enable comparison."
+            })
+            
+        except SpotifyUser.DoesNotExist:
+            messages.error(request, "Friend not found.")
+            return redirect('duo_wrapped')
+            
+    except Exception as e:
+        logger.error(f"Error in duo_comparison: {str(e)}")
+        messages.error(request, "An error occurred while creating the duo comparison.")
+        return redirect('duo_wrapped')
