@@ -572,14 +572,14 @@ def wrapped_results(request):
     
     tracks_data = []
     genre_dict = {}
-    genre_dict['december_break_genres'] = ['holidays', 'gospel', 'children','disney', 'jazz']
+    genre_dict['december_break_genres'] = ['holidays', 'gospel', 'children', 'jazz', 'classical', 'piano', 'soft rock', 'kentucky indie']
     genre_dict['valentines_genres'] = ['romance', 'r-n-b', 'soul', 'singer-songwriter', 'pop']
-    genre_dict['fourth_genres'] = ['rock', 'country', 'pop', 'dance', 'party']
-    genre_dict['december_break_genres_broad'] = ['classical', 'piano', 'singer', 'singer-songwriter', 'pop', 'folk']
+    genre_dict['fourth_genres'] = ['rock', 'country', 'summer', 'dance', 'contemporary country', 'party', 'kentucky indie']
+    genre_dict['december_break_genres_broad'] = ['singer', 'singer-songwriter', 'folk', 'movies', 'opera', 'show-tunes', 'soul', 'folk', 'art pop']
     genre_dict['valentines_genres_broad'] = ['jazz', 'acoustic', 'latin', 'piano', 'indie-pop']
     genre_dict['fourth_genres_broad'] = ['indie', 'funk', 'disco', 'blues', 'folk']
 
-
+    print(spotify.recommendation_genre_seeds())
     # Process tracks based on theme
     if holiday_theme != 'none':
         curr_genres = genre_dict[holiday_theme + "_genres"]
