@@ -617,24 +617,40 @@ def wrapped_results(request):
     ]
 
     #Annarose's 2AM LLM Functionality yay
+    # Initialize Gemini Personality Generator
     personality_gen = GeminiPersonalityGenerator()
 
     # Fetch top genres and artists from Spotify
-    llm_top_artists = spotify.current_user_top_artists(limit=5, time_range='medium_term')
-    llm_artist_names = [artist['name'] for artist in top_artists['items']]
+    llm_top_artists = spotify.current_user_top_artists(limit=5,
+                                                       time_range='medium_term')
 
+    # Extract artist names and ensure they are valid strings
+    llm_artist_names = [artist['name'] for artist in llm_top_artists['items'] if
+                        isinstance(artist['name'], str)]
+    print("Artist Names:", llm_artist_names)
+
+    # Extract genres and filter out nested lists or invalid values
     llm_genres = set()
-    for artist in top_artists['items']:
-        llm_genres.update(artist['genres'])
-    llm_top_genres = list(llm_genres)[:5]
+    for artist in llm_top_artists['items']:
+        for genre in artist['genres']:  # Ensure genres are unpacked
+            if isinstance(genre, str):  # Check each genre is a string
+                llm_genres.add(genre)
+
+    # Select top genres and ensure they are valid strings
+    llm_top_genres = list(llm_genres)[:5]  # Convert set to list and limit to 5
+    print("Top Genres:", llm_top_genres)
 
     # Generate personality description
-    personality_markdown = personality_gen.generate_personality_description(
-            llm_top_genres,
-            llm_artist_names,
-            time_range
+    try:
+        personality_markdown = personality_gen.generate_personality_description(
+            llm_top_genres, llm_artist_names
         )
-    personality_html = personality_gen.markdown_to_html(personality_markdown)
+        # Convert markdown to HTML
+        personality_html = personality_gen.markdown_to_html(
+            personality_markdown)
+    except TypeError as e:
+        print(f"Error generating personality description: {e}")
+        personality_html = "Error generating description."
 
     # Save to user model
     user = SpotifyUser.objects.get(spotify_id=spotify.me()['id'])
