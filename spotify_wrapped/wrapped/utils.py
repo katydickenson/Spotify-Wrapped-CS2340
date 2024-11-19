@@ -35,7 +35,7 @@ class GeminiPersonalityGenerator:
 
     @retry_on_failure(max_attempts=3)
     def generate_personality_description(genres, artists, time_range="medium_term"):
-        genai.configure(api_key='YOUR_GEMINI_API_KEY')
+        genai.configure(api_key='GEMINI_API_KEY')
         model = genai.GenerativeModel('gemini-pro')
 
         try:
