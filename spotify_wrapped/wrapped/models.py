@@ -12,6 +12,9 @@ class SpotifyUser(models.Model):
     friends = models.ManyToManyField('self', symmetrical=False, blank=True)
     past_wraps = models.JSONField(default=list)
     last_spotify_wrapped = models.JSONField(default=dict)
+    wrapped_id = models.CharField(max_length=10, unique=True)  #
+
+    # this field
 
     def __str__(self):
         return self.user_name

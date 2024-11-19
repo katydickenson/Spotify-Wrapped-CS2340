@@ -682,12 +682,11 @@ function removeFriend(friendId) {
             <div class="friends-section">
     <h2 class="section-title">Add New Friends</h2>
     <div class="search-container">
-        <input 
-            type="text" 
-            class="search-input" 
-            id="friendSearch"
-            placeholder="Enter Spotify ID"
-            autocomplete="off"
+        <input type="text" 
+       class="search-input" 
+       id="friendSearch" 
+       placeholder="Enter Wrapped ID" 
+       autocomplete="off"
         >
         <div class="loading-indicator" id="loadingIndicator">
             Searching...
@@ -712,12 +711,12 @@ function removeFriend(friendId) {
     </div>
     {% endfor %}
 </div>
-    <p style="margin-top: 1rem; color: var(--spotify-light-gray);">
-        Your Spotify ID: {{ spotify_id }}
-    </p>
-    <p style="color: var(--spotify-light-gray);">
-        Share your Spotify ID with friends to connect!
-    </p>
+   <p style="margin-top: 1rem; color: var(--spotify-light-gray);">
+    Your Wrapped ID: {{ wrapped_id }}
+</p>
+<p style="color: var(--spotify-light-gray);">
+    Share your Wrapped ID with friends to connect!
+</p>
 </div>
             <div class="popup-overlay" id="popupOverlay"></div>
 <div class="popup" id="popup">
@@ -860,9 +859,9 @@ async function refreshFriendsList() {
         loadingIndicator.style.display = 'block';
         searchResults.style.display = 'none';
 
-        // Add query parameters properly
         const url = new URL('/search-users/', window.location.origin);
         url.searchParams.append('query', query);
+        url.searchParams.append('search_by', 'wrapped_id');  // Add this parameter
 
         const response = await fetch(url);
         const data = await response.json();
@@ -878,12 +877,11 @@ async function refreshFriendsList() {
         } else {
             searchResults.innerHTML = `
                 <div class="search-result-item">
-                    <p>No users found with Spotify ID: ${query}</p>
-                    <p class="search-hint">Try entering a complete Spotify ID</p>
+                    <p>No users found with Wrapped ID: ${query}</p>
+                    <p class="search-hint">Try entering a complete Wrapped ID</p>
                 </div>`;
             searchResults.style.display = 'block';
         }
-
     } catch (error) {
         console.error('Search error:', error);
         loadingIndicator.style.display = 'none';
@@ -899,36 +897,37 @@ async function refreshFriendsList() {
 function displayResults(results) {
     try {
         const resultsHtml = results.map(user => {
-            const isFriend = Array.from(document.querySelectorAll('.friend-id')).some(
-                el => el.textContent === user.id
-            );
+            const isFriend = Array.from(document.querySelectorAll('.friend-id'))
+                .some(el => el.textContent === user.wrapped_id);
             
             return `
-                <div class="search-result-item">
-                    <div class="search-result-avatar">
-                        ${user.profile_image 
-                            ? `<img src="${user.profile_image}" alt="${user.name}" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${user.name.charAt(0).toUpperCase()}</text></svg>'">`
-                            : `<div class="avatar-placeholder">${user.name.charAt(0).toUpperCase()}</div>`
-                        }
-                    </div>
-                    <div class="search-result-info">
-                        <div class="search-result-name">${user.name}</div>
-                        <div class="search-result-id">${user.id}</div>
-                    </div>
-                    <button class="add-friend-btn ${isFriend ? 'added' : ''}" 
-                            onclick="addFriend('${user.id}', this)"
-                            ${isFriend ? 'disabled' : ''}>
-                        ${isFriend ? 'Friends' : 'Add Friend'}
-                    </button>
+            <div class="search-result-item">
+                <div class="search-result-avatar">
+                    ${user.profile_image ? 
+                        `<img src="${user.profile_image}" alt="${user.user_name}" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${user.user_name.charAt(0).toUpperCase()}</text></svg>'">` : 
+                        `<div class="avatar-placeholder">${user.user_name.charAt(0).toUpperCase()}</div>`
+                    }
                 </div>
-            `;
+                <div class="search-result-info">
+                    <div class="search-result-name">${user.user_name}</div>
+                    <div class="search-result-id">Wrapped ID: ${user.wrapped_id}</div>
+                </div>
+                <button class="add-friend-btn ${isFriend ? 'added' : ''}" 
+                        onclick="addFriend('${user.spotify_id}', this)" 
+                        ${isFriend ? 'disabled' : ''}>
+                    ${isFriend ? 'Friends' : 'Add Friend'}
+                </button>
+            </div>`;
         }).join('');
 
-        searchResults.innerHTML = resultsHtml || '<div class="search-result-item">No matching users found</div>';
+        searchResults.innerHTML = resultsHtml || 
+            '<div class="search-result-item">No matching users found</div>';
         searchResults.style.display = 'block';
     } catch (error) {
         console.error('Error displaying results:', error);
-        searchResults.innerHTML = '<div class="search-result-item error">Error displaying results</div>';
+        searchResults.innerHTML = 
+            '<div class="search-result-item error">Error displaying results</div>';
     }
 }
 </script>
