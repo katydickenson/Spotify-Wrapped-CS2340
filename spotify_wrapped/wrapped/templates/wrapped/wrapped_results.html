@@ -208,6 +208,80 @@
             color: var(--spotify-light-gray);
             margin-bottom: 0.5rem;
         }
+        .llm-slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /*remove later maybe! */
+            width: 60%;
+            height: 40vh;
+            margin: auto;
+            border-radius: 12px;
+            background-color: var(--spotify-black);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+        }
+
+        .typewriter {
+        overflow: hidden;
+        border-right: .15em solid var(--spotify-green);
+        white-space: pre-wrap;
+        margin: 0 auto;
+        animation:
+            typing 3.5s steps(40, end),
+            blink-caret .75s step-end infinite;
+    }
+
+    @keyframes typing {
+        from {
+            max-height: 0;
+            opacity: 0;
+        }
+        to {
+            max-height: 1000px;
+            opacity: 1;
+        }
+    }
+
+    @keyframes blink-caret {
+        from, to { border-color: transparent }
+        50% { border-color: var(--spotify-green); }
+    }
+
+        /* Title styling */
+        .llm_container .title {
+            font-size: 2rem; /* All genres same size */
+            font-weight: bold;
+            background: linear-gradient(to right, var(--spotify-green), #4eda7c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease, background 0.3s ease;
+        }
+
+        .llm_container .title:hover {
+            background: linear-gradient(to right, #4eda7c, var(--spotify-green));
+            color: var(--spotify-light-gray);
+        }
+
+        /* Content styling */
+        .llm_container .content {
+            font-size: 0.75rem;
+            color: var(--spotify-light-gray);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .llm_container .content:hover {
+            color: var(--spotify-green);
+            text-shadow: 0 0 5px var(--spotify-green);
+        }
 
         .nav-arrow {
             position: fixed;
@@ -266,6 +340,7 @@
             transform: translateX(200%);
             background-color: var(--spotify-black); /* Match background color */
         }
+
     </style>
 </head>
 <body>
@@ -338,6 +413,20 @@
                     {% endfor %}
                 </div>
             </div>
+            <div class="slide llm">
+                <div class="llm_container">
+                    <h3 class="title">Your Musical Personality</h3>
+                    <div class="content">
+                        {% for paragraph in personality_description|safe|split:'<p>' %}
+                            {% if paragraph %}
+                                <div class="typewriter" style="animation-delay: {{ forloop.counter }}s;">
+                                    {{ paragraph|safe }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
 
         <button class="nav-arrow prev" onclick="prevSlide()">
@@ -361,7 +450,8 @@
             const slides = {
                 tracks: 0,
                 artists: 1,
-                genres: 2
+                genres: 2,
+                llm: 3
             };
 
             const slideElements = document.querySelectorAll('.slide');

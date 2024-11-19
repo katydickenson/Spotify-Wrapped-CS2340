@@ -19,6 +19,8 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from .utils import GeminiPersonalityGenerator
+#from .utils import generate_personality_description, markdown_to_html
 
 
 logger = logging.getLogger(__name__)
@@ -617,6 +619,31 @@ def wrapped_results(request):
         } for genre, count in top_genres
     ]
 
+    #Annarose's 2AM LLM Functionality yay
+    personality_gen = GeminiPersonalityGenerator()
+
+    # Fetch top genres and artists from Spotify
+    llm_top_artists = spotify.current_user_top_artists(limit=5, time_range='medium_term')
+    llm_artist_names = [artist['name'] for artist in top_artists['items']]
+
+    llm_genres = set()
+    for artist in top_artists['items']:
+        llm_genres.update(artist['genres'])
+    llm_top_genres = list(llm_genres)[:5]
+
+    # Generate personality description
+    personality_markdown = personality_gen.generate_personality_description(
+            llm_top_genres,
+            llm_artist_names,
+            time_range
+        )
+    personality_html = personality_gen.markdown_to_html(personality_markdown)
+
+    # Save to user model
+    user = SpotifyUser.objects.get(spotify_id=spotify.me()['id'])
+    user.personality_description = personality_markdown
+    user.save()
+
     # Save wrap
     wrap = SavedWrap.objects.create(
         user=spotify_user,
@@ -625,7 +652,8 @@ def wrapped_results(request):
         artists_data=artist_list,  # Use the themed or regular artist list
         genres_data=formatted_genres,
         time_range=time_range,
-        holiday_theme=holiday_theme
+        holiday_theme=holiday_theme,
+        personality_description=personality_html
     )
 
     return render(request, 'wrapped/wrapped_results.html', {
@@ -635,7 +663,8 @@ def wrapped_results(request):
         'time_range': time_range,
         'holiday_theme': holiday_theme,
         'user_name': user_profile['display_name'],
-        'wrapped_name': request.session.get('wrapped_name', '')
+        'wrapped_name': request.session.get('wrapped_name', ''),
+        'personality_description': personality_html
     })
 
 @require_spotify_auth
