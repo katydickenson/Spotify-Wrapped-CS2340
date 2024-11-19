@@ -248,14 +248,10 @@ def spotify_callback(request):
         return redirect('login')
 
     code = request.GET.get('code')
-    state = request.GET.get('state')
 
     if not code:
         logger.error(
             "CSRF token mismatch or no authorization code received")
-        return redirect('login')
-    if state != request.session.get('spotify_auth_state'):
-        logger.error("no authorization code received")
         return redirect('login')
 
     try:

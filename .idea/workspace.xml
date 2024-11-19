@@ -5,17 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="479797bc-8355-4d8c-8427-d398e464e9a3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/spotify_wrapped/management/backfill_wrapped_id.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/spotify_wrapped/management/commands/backfill_wrapped_id.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/.cache" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/spotify_wrapped/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/spotify_wrapped/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/spotify_wrapped/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/templates/wrapped/addFriends.html" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/templates/wrapped/addFriends.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/templates/wrapped/contactUs.html" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/templates/wrapped/contactUs.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/templates/wrapped/past_spotify_wraps.html" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/templates/wrapped/past_spotify_wraps.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +107,7 @@
       <workItem from="1730932573797" duration="4520000" />
       <workItem from="1731008113352" duration="1329000" />
       <workItem from="1731110705748" duration="4578000" />
-      <workItem from="1732028563372" duration="7995000" />
+      <workItem from="1732028563372" duration="8466000" />
     </task>
     <servers />
   </component>
