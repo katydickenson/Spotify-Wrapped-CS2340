@@ -238,12 +238,17 @@
             </form>
         </div>
         {% endif %}
-
-        <div class="row">
+        <div class="row"></div>
             {% for wrap in wraps %}
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ wrap.title }}</h5>
+                    <h5 class="card-title">
+                        {% if wrap.friend_tracks_data %}
+                            Duo Wrapped - {{ wrap.title|slice:"14:" }}
+                        {% else %}
+                            {{ wrap.title }}
+                        {% endif %}
+                    </h5>
                     <p class="card-text">Created: {{ wrap.created_at|date:"M d, Y" }}</p>
                     <div class="button-group">
                         <a href="{% url 'view_saved_wrap' wrap.id %}" class="btn-primary">View Wrap</a>

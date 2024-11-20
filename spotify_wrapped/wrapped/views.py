@@ -578,7 +578,6 @@ def wrapped_results(request):
                          'bells', 'hanukkah', 'train', 'jesus', 
                          'dreidel', 'joy', 'snow', 'ye', 'hallelujah']
     
-    # Process tracks based on theme
     for track in top_tracks['items']:
         track_name = track['name'].lower()
         track_data = {
@@ -758,55 +757,62 @@ def duo_wrapped(request):
     except Exception as e:
         logger.error(f"Error in duo_wrapped view: {str(e)}")
         return redirect('home')
-
-@require_spotify_auth
+    
 def duo_comparison(request, friend_id):
     try:
-        # Get current user's Spotify client
-        current_user = SpotifyUser.objects.get(spotify_id=request.session.get('spotify_id'))
-        current_user_spotify = spotipy.Spotify(auth=request.session['access_token'])
-        
-        # Get current user's top tracks so that nxt page renders
-        user_top_tracks = current_user_spotify.current_user_top_tracks(
-                limit=5,
-                offset=0,
-                time_range='medium_term'
-            )['items']
-        
-        try:
-            friend = SpotifyUser.objects.get(spotify_id=friend_id)
-            
-            # Even if friend auth doesn't exist, we'll still render the page
+        friend = SpotifyUser.objects.get(spotify_id=friend_id)
+
+        friend_wrap = SavedWrap.objects.filter(user=friend).order_by('-created_at').first()
+
+        current_user_songs = []
+        spotify_id = request.session.get('spotify_id')
+        if spotify_id:
             try:
-                friend_auth = SpotifyAuth.objects.get(user=friend)
-                if friend_auth.is_token_valid():
-                    friend_spotify = spotipy.Spotify(auth=friend_auth.access_token)
-                    friend_top_tracks = friend_spotify.current_user_top_tracks(
-                        limit=5,
-                        offset=0,
-                        time_range='medium_term'
-                    )['items']
-                else:
-                    friend_top_tracks = None
-            except SpotifyAuth.DoesNotExist:
-                friend_top_tracks = None
-                logger.info(f"Friend {friend_id} needs to authenticate")
+                current_user = SpotifyUser.objects.get(spotify_id=spotify_id)
+                current_user_wrap = SavedWrap.objects.filter(user=current_user).order_by('-created_at').first()
+                if current_user_wrap:
+                    if isinstance(current_user_wrap.tracks_data, list):
+                        current_user_songs = current_user_wrap.tracks_data[:5]
+                    elif isinstance(current_user_wrap.tracks_data, dict):
+                        current_user_songs = current_user_wrap.tracks_data.get('current_user_tracks', [])[:5]
+            except SpotifyUser.DoesNotExist:
+                pass
+        
+        friend_has_wrap = bool(friend_wrap)
+        friend_songs = []
+        
+        if friend_wrap:
+            if isinstance(friend_wrap.tracks_data, list):
+                friend_songs = friend_wrap.tracks_data[:5]
+            elif isinstance(friend_wrap.tracks_data, dict):
+                friend_songs = friend_wrap.tracks_data.get('current_user_tracks', [])[:5]
             
-            # Always render the page, with or without friend's tracks
-            return render(request, 'wrapped/duo_comparison.html', {
-                'user': current_user,
-                'friend': friend,
-                'user_songs': user_top_tracks,
-                'friend_songs': friend_top_tracks,
-                'friend_needs_auth': friend_top_tracks is None,
-                'message': "Your friend needs to log in to enable comparison."
-            })
-            
-        except SpotifyUser.DoesNotExist:
-            messages.error(request, "Friend not found.")
-            return redirect('duo_wrapped')
-            
-    except Exception as e:
-        logger.error(f"Error in duo_comparison: {str(e)}")
-        messages.error(request, "An error occurred while creating the duo comparison.")
-        return redirect('duo_wrapped')
+            combined_tracks = {
+                'current_user_tracks': current_user_songs,
+                'friend_tracks': friend_songs
+            }
+
+            duo_wrap = SavedWrap(
+                user=current_user,
+                title=f"Duo Wrapped - {friend.user_name}",
+                tracks_data=combined_tracks,
+                friend_tracks_data=friend_songs,
+                artists_data=[],
+                genres_data=[],
+                created_at=timezone.now(),
+                time_range='all_time'
+            )
+            duo_wrap.save()
+        
+        context = {
+            'friend': friend,
+            'friend_has_wrap': friend_has_wrap,
+            'friend_songs': friend_songs,
+            'current_user_songs': current_user_songs,
+        }
+        
+        return render(request, 'wrapped/duo_comparison.html', context)
+        
+    except SpotifyUser.DoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('home')

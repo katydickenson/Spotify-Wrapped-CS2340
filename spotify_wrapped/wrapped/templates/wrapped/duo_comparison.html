@@ -235,17 +235,18 @@
 
     <div class="comparison-container">
         <div class="users-comparison">
-            <!-- Inside the user section -->
+            <!-- Current User Section -->
             <div class="user-section">
-                <h2>{{ user.user_name }}</h2>
+                <h2>Your Top Songs</h2>
                 <ul class="song-list">
-                    {% for track in user_songs %}
+                    {% for track in current_user_songs %}
                     <li class="song-item">
                         <span class="song-number">#{{ forloop.counter }}</span>
-                        <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="song-image">
+                        {% if track.image_url %}
+                        <img src="{{ track.image_url }}" alt="{{ track.name }}" class="song-image">
+                        {% endif %}
                         <div class="song-details">
                             <div class="song-title">{{ track.name }}</div>
-                            <div class="song-artist">{{ track.artists.0.name }}</div>
                         </div>
                         {% if track.preview_url %}
                         <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
@@ -257,86 +258,93 @@
                     {% endfor %}
                 </ul>
             </div>
+
+
+            <!-- Friend Section -->
             <div class="user-section">
-                <h2>{{ friend.user_name }}</h2>
-                {% if friend_needs_auth %}
+                <h2>{{ friend.user_name }}'s Top Songs</h2>
+                {% if not friend_has_wrap %}
                     <div class="auth-needed">
-                        <p>{{ friend.user_name }} needs to connect their Spotify account.</p>
-                        <p>Share this link with them:</p>
+                        <p>{{ friend.user_name }} hasn't created their Spotify Wrapped yet.</p>
+                        <p>Share this link with them to create their Wrapped:</p>
                         <input type="text" readonly value="{{ request.scheme }}://{{ request.get_host }}" class="share-link">
                         <button onclick="copyLink()" class="copy-btn">Copy Link</button>
-                        <p>Or Click Here to Log in:</p>
-                        <a href="{% url 'login' %}" class="copy-btn" style="text-decoration: none; display: inline-block;">Log in</a>
+                        <p>Or they can click here to create their Wrapped:</p>
+                        <a href="{% url 'login' %}" class="copy-btn" style="text-decoration: none; display: inline-block;">Create Wrapped</a>
                     </div>
                 {% else %}
-                    <ul class="song-list">
-                        {% for track in friend_songs %}
-                        <li class="song-item">
-                            <span class="song-number">#{{ forloop.counter }}</span>
-                            <img src="{{ track.album.images.0.url }}" alt="{{ track.name }}" class="song-image">
-                            <div class="song-details">
-                                <div class="song-title">{{ track.name }}</div>
-                                <div class="song-artist">{{ track.artists.0.name }}</div>
-                            </div>
-                            {% if track.preview_url %}
-                            <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
-                                <div class="play-icon"></div>
-                                <div class="pause-icon"></div>
-                            </button>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </div>
-            
-            <script>
-            function copyLink() {
-                const linkInput = document.querySelector('.share-link');
-                linkInput.select();
-                document.execCommand('copy');
-                const btn = document.querySelector('.copy-btn');
-                btn.textContent = 'Copied!';
-                setTimeout(() => btn.textContent = 'Copy Link', 2000);
-            }
-            </script>
-            <script>
-            let currentAudio = null;
-            let currentButton = null;
+                <ul class="song-list">
+                    {% for track in friend_songs %}
+                    <li class="song-item">
+                        <span class="song-number">#{{ forloop.counter }}</span>
+                        {% if track.image_url %}
+                            <img src="{{ track.image_url }}" alt="{{ track.name }}" class="song-image">
+                        {% endif %}
+                        <div class="song-details">
+                            <div class="song-title">{{ track.name }}</div>
+                        </div>
+                        {% if track.preview_url %}
+                        <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
+                            <div class="play-icon"></div>
+                            <div class="pause-icon"></div>
+                        </button>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
 
-            function togglePlay(button, previewUrl) {
-                const playIcon = button.querySelector('.play-icon');
-                const pauseIcon = button.querySelector('.pause-icon');
+    <script>
+        function copyLink() {
+            const linkInput = document.querySelector('.share-link');
+            linkInput.select();
+            document.execCommand('copy');
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy Link', 2000);
+        }
+    </script>
 
-                if (currentAudio && currentAudio.src === previewUrl) {
-                    if (currentAudio.paused) {
-                        currentAudio.play();
-                        playIcon.style.display = 'none';
-                        pauseIcon.style.display = 'block';
-                    } else {
-                        currentAudio.pause();
-                        playIcon.style.display = 'block';
-                        pauseIcon.style.display = 'none';
-                    }
-                } else {
-                    if (currentAudio) {
-                        currentAudio.pause();
-                        if (currentButton) {
-                            currentButton.querySelector('.play-icon').style.display = 'block';
-                            currentButton.querySelector('.pause-icon').style.display = 'none';
-                        }
-                    }
+    <script>
+        let currentAudio = null;
+        let currentButton = null;
 
-                    currentAudio = new Audio(previewUrl);
-                    currentButton = button;
+        function togglePlay(button, previewUrl) {
+            const playIcon = button.querySelector('.play-icon');
+            const pauseIcon = button.querySelector('.pause-icon');
+
+            if (currentAudio && currentAudio.src === previewUrl) {
+                if (currentAudio.paused) {
                     currentAudio.play();
                     playIcon.style.display = 'none';
                     pauseIcon.style.display = 'block';
-
-                    currentAudio.onended = function() {
-                        playIcon.style.display = 'block';
-                        pauseIcon.style.display = 'none';
-                    };
+                } else {
+                    currentAudio.pause();
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
                 }
+            } else {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    if (currentButton) {
+                        currentButton.querySelector('.play-icon').style.display = 'block';
+                        currentButton.querySelector('.pause-icon').style.display = 'none';
+                    }
+                }
+
+                currentAudio = new Audio(previewUrl);
+                currentButton = button;
+                currentAudio.play();
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+
+                currentAudio.onended = function() {
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                };
             }
-            </script>
+        }
+    </script>
+</body>
+</html>
