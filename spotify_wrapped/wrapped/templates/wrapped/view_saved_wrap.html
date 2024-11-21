@@ -157,6 +157,41 @@
         .back-button2:hover {
             background: #1ed760;
         }
+
+        .song-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            background: var(--spotify-dark-gray);
+            border-radius: 4px;
+        }
+
+        .song-number {
+            margin-right: 1rem;
+            color: var(--spotify-green);
+            min-width: 25px;
+        }
+
+        .song-image {
+            width: 40px; /* Small square image */
+            height: 40px;
+            border-radius: 4px;
+            margin-right: 1rem;
+        }
+
+        .song-details {
+            flex-grow: 1;
+        }
+
+        .song-title {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -176,49 +211,107 @@
         </a>
     </nav>
     <main>
-        <h1>{{ wrap.title }}</h1>
-        <p>Created: {{ wrap.created_at|date:"M d, Y" }}</p>
+        {% if wrap.friend_tracks_data %}
+            <h1>Duo Wrapped with {{ wrap.title|slice:"14:" }}</h1>
+            <p>Created: {{ wrap.created_at|date:"M d, Y" }}</p>
+            
+            <!-- Duo Comparison Section -->
+            <div class="section">
+                <div class="comparison-container">
+                    <!-- Current User's Songs -->
+                    <div class="user-section">
+                        <h2>Your Top Songs</h2>
+                        <ul class="song-list">
+                            {% for track in wrap.tracks_data.current_user_tracks %}
+                            <li class="song-item">
+                                <span class="song-number">#{{ forloop.counter }}</span>
+                                {% if track.image_url %}
+                                    <img src="{{ track.image_url }}" alt="{{ track.name }}" class="song-image">
+                                {% endif %}
+                                <div class="song-details">
+                                    <div class="song-title">{{ track.name }}</div>
+                                </div>
+                                {% if track.preview_url %}
+                                <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
+                                    <div class="play-icon"></div>
+                                    <div class="pause-icon"></div>
+                                </button>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
 
-        <!-- Top Tracks Section -->
-        <div class="section">
-            <h2>Top Tracks</h2>
-            <div class="row">
-                {% for track in wrap.tracks_data %}
-                <div class="card">
-                    {% if track.image_url %}
-                    <img src="{{ track.image_url }}" alt="{{ track.name }}">
-                    {% endif %}
-                    <h3 class="card-title">{{ track.name }}</h3>
-                    <p class="card-text">{{ track.artist }}</p>
+                    <!-- Friend's Songs -->
+                    <div class="user-section">
+                        <h2>{{ wrap.title|slice:"14:" }}'s Top Songs</h2>
+                        <ul class="song-list">
+                            {% for track in wrap.tracks_data.friend_tracks %}
+                            <li class="song-item">
+                                <span class="song-number">#{{ forloop.counter }}</span>
+                                {% if track.image_url %}
+                                    <img src="{{ track.image_url }}" alt="{{ track.name }}" class="song-image">
+                                {% endif %}
+                                <div class="song-details">
+                                    <div class="song-title">{{ track.name }}</div>
+                                </div>
+                                {% if track.preview_url %}
+                                <button class="play-button" onclick="togglePlay(this, '{{ track.preview_url }}')" title="Play preview">
+                                    <div class="play-icon"></div>
+                                    <div class="pause-icon"></div>
+                                </button>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
+        {% else %}
+            <h1>{{ wrap.title }}</h1>
+            <p>Created: {{ wrap.created_at|date:"M d, Y" }}</p>
 
-        <!-- Top Artists Section -->
-        <div class="section">
-            <h2>Top Artists</h2>
-            <div class="row">
-                {% for artist in wrap.artists_data %}
-                <div class="card">
-                    {% if artist.image_url %}
-                    <img src="{{ artist.image_url }}" alt="{{ artist.name }}">
-                    {% endif %}
-                    <h3 class="card-title">{{ artist.name }}</h3>
+            <!-- Top Tracks Section -->
+            <div class="section">
+                <h2>Top Tracks</h2>
+                <div class="row">
+                    {% for track in wrap.tracks_data %}
+                    <div class="card">
+                        {% if track.image_url %}
+                        <img src="{{ track.image_url }}" alt="{{ track.name }}">
+                        {% endif %}
+                        <h3 class="card-title">{{ track.name }}</h3>
+                        <p class="card-text">{{ track.artist }}</p>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
 
-        <!-- Top Genres Section -->
-        <div class="section">
-            <h2>Top Genres</h2>
-            <ul class="genres-list">
-                {% for genre in wrap.genres_data %}
-                <li class="genre-item">{{ genre.name }} ({{ genre.count }})</li>
-                {% endfor %}
-            </ul>
-        </div>
+            <!-- Top Artists Section -->
+            <div class="section">
+                <h2>Top Artists</h2>
+                <div class="row">
+                    {% for artist in wrap.artists_data %}
+                    <div class="card">
+                        {% if artist.image_url %}
+                        <img src="{{ artist.image_url }}" alt="{{ artist.name }}">
+                        {% endif %}
+                        <h3 class="card-title">{{ artist.name }}</h3>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Top Genres Section -->
+            <div class="section">
+                <h2>Top Genres</h2>
+                <ul class="genres-list">
+                    {% for genre in wrap.genres_data %}
+                    <li class="genre-item">{{ genre.name }} ({{ genre.count }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
 
         <a href="{% url 'past_spotify_wraps' %}" class="back-button2">Back to Past Wraps</a>
     </main>
