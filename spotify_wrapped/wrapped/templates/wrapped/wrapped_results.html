@@ -402,7 +402,7 @@
                     {% endfor %}
                 </div>
             </div>
-
+        
             <div class="slide genres">
                 <div class="genres-container">
                     {% for genre in genres %}
@@ -417,12 +417,8 @@
                 <div class="llm_container">
                     <h3 class="title">Your Musical Personality</h3>
                     <div class="content">
-                        {% for paragraph in personality_description|safe|split:'<p>' %}
-                            {% if paragraph %}
-                                <div class="typewriter" style="animation-delay: {{ forloop.counter }}s;">
-                                    {{ paragraph|safe }}
-                                </div>
-                            {% endif %}
+                        {% for paragraph in personality %}
+                            <div class="para">{{ paragraph }}</div>
                         {% endfor %}
                     </div>
                 </div>

@@ -88,6 +88,7 @@ class SavedWrap(models.Model):
     genres_data = models.JSONField()
     time_range = models.CharField(max_length=50)
     holiday_theme = models.CharField(max_length=50, null=True, blank=True)
+    personality_info = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

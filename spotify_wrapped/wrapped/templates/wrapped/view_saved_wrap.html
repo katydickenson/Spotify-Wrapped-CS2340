@@ -136,6 +136,16 @@
                 {% endfor %}
             </ul>
         </div>
+    
+        <!-- Personality Infor section -->
+        <div class="section">
+            <h2>Personalities</h2>
+            <ul class="row">
+                {% for para in wrap.personality_info %}
+                <li class="per-trait">{{ para }}</li>
+                {% endfor %}
+            </ul>
+        </div>
 
         <a href="{% url 'past_spotify_wraps' %}" class="back-button">Back to Past Wraps</a>
     </main>

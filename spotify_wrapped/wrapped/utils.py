@@ -1,12 +1,16 @@
 import google.generativeai as genai
 from markdown2 import markdown
 import logging
-
+import re
 from django.conf import settings
 from functools import wraps
 from time import sleep
+import google.generativeai as genai
+import os
 
 logger = logging.getLogger(__name__)
+genai.configure(api_key="GEMINI_API_KEY")
+
 
 def retry_on_failure(max_attempts=3, delay=1):
     def decorator(func):
@@ -34,33 +38,29 @@ class GeminiPersonalityGenerator:
         self.model = genai.GenerativeModel('gemini-pro')
 
     @retry_on_failure(max_attempts=3)
-    def generate_personality_description(genres, artists, time_range="medium_term"):
-        genai.configure(api_key='GEMINI_API_KEY')
+    def generate_personality_description(gem, genres, artists):
+        #genai.configure(api_key='GEMINI_API_KEY')
         model = genai.GenerativeModel('gemini-pro')
-
+        print("genres:")
+        print(genres)
+        print("artists:")
+        print(artists)
         try:
-            time_range_text = {
-                "short_term": "Last Month",
-                "medium_term": "6 Months",
-                "long_term": "One Year"
-            }.get(time_range, "6 Months")
-
             prompt = f"""
-                        Based on these music preferences over {time_range_text}:
-                        Top Genres: {', '.join(genres)}
-                        Top Artists: {', '.join(artists)}
+                        Based on these music preferences over:
+                        Top Genres: {genres}
+                        Top Artists: {artists}
 
                         Create a personality description of this music listener. 
-                        Format the response in markdown with these sections:
+                        Format the response as a string with these sections:
                         - Overall Vibe
-                        - Musical Journey
                         - Personality Traits
                         - Music Recommendations
 
-                        Keep each section concise and engaging.
+                        Keep each section short and engaging.
                         """
+            response = model.generate_content(prompt)
 
-            response = cdmodel.generate_content(prompt)
             logger.info(f"Successfully generated personality description for genres: {genres}")
             return response.text
 
