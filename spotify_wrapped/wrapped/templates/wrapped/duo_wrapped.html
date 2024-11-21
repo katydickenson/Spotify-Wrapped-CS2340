@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Wrap</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-dark-gray: #282828;
+            --spotify-light-gray: #B3B3B3;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--spotify-black);
+            color: white;
+            min-height: 100vh;
+        }
+
+        main {
+            padding: 8rem 2rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            color: var(--spotify-green);
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--spotify-dark-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card img {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .card-title {
+            color: white;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .card-text {
+            color: var(--spotify-light-gray);
+        }
+
+        .genres-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .genre-item {
+            background: var(--spotify-dark-gray);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .title-section {
+            text-align: center;
+            margin: 5rem .5rem .5rem;
+            position: absolute;
+            top: 1rem;
+            width: 100%;
+            left:0;
+        }
+        .subtitle-section {
+            text-align: center;
+            margin-bottom: 1rem;
+            position: absolute;
+            top: 10rem;  /* Adjust this value to move subtitle up/down */
+            width: 100%;
+            left: 0;
+        }
+
+        .subtitle-section {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: white;
+            font-size: 1.2rem;
+        }
+        .friends-list {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 20px;
+        }
+
+        .friend-item {
+            background: var(--spotify-dark-gray);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .friend-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--spotify-green);
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .friend-info {
+            flex-grow: 1;
+        }
+
+        .friend-name {
+            color: white;
+            font-size: 1.2rem;
+        }
+        .select-friend-btn {
+            background: none;
+            color: var(--spotify-green);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .select-friend-btn:hover {
+            color: #1ed760;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--spotify-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            overflow: hidden; /* Add this to ensure the image stays within the circle */
+        }
+        .user-avatar img {
+        width: 100%;
+        height: 100%;object-fit: cover; /* This ensures the image covers the entire space properly */
+            
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        /* Update the back button CSS */
+        .back-button {
+            position: relative; /* Change from absolute to relative */
+            background-color: transparent;
+            border: 1px solid var(--spotify-green);
+            color: var(--spotify-green);
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            margin-left: auto; /* Add this to push it to the right */
+            margin-right: 1rem; /* Add some spacing from the right edge */
+        }
+        
+        .back-button:hover {
+            background-color: var(--spotify-green);
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .back-arrow {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body class="spotify-theme">
+    <nav class="navbar">
+        <div class="user-info">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="{{ user_name }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar">
+                    {{ user_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <span>{{ user_name }}</span>
+        </div>
+        <a href="{% url 'home' %}" class="back-button">
+            <span class="back-arrow">←</span> Back
+        </a>
+    </nav>
+    <div class="back-section">
+        <a href="{% url 'home' %}" class="back-button">
+            <span class="back-arrow">←</span> Back
+        </a>
+    </div>
+
+    <main class="main-content">
+        <div class="title-section">
+            <h1>Create Duo Wrapped</h1>
+        </div>
+
+        <div class="subtitle-section">
+            <p class="subtitle">Select a friend to make a conjoined wrap with!</p>
+        </div>
+
+        <div class="friends-list">
+            {% if friends %}
+                {% for friend in friends %}
+                <div class="friend-item" onclick="selectFriend('{{ friend.spotify_id }}')" style="cursor: pointer;">
+                    <!-- Remove the button and make the whole div clickable -->
+                    {% if friend.profile_image %}
+                        <img src="{{ friend.profile_image }}" alt="{{ friend.user_name }}" class="friend-avatar">
+                    {% else %}
+                        <div class="friend-avatar">{{ friend.user_name|slice:":1"|upper }}</div>
+                    {% endif %}
+                    <div class="friend-info">
+                        <span class="friend-name">{{ friend.user_name }}</span>
+                    </div>
+                    <span class="select-friend-btn">
+                        Select
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-friends-message">
+                    <p>You haven't added any friends yet!</p>
+                    <a href="{% url 'add_friends' %}" class="add-friends-link">Add Friends</a>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+    
+        <script>
+            function selectFriend(friendId) {
+                console.log('Selecting friend:', friendId); // Debug log
+                try {
+                    const url = "{% url 'duo_comparison' friend_id='FRIEND_ID' %}".replace('FRIEND_ID', friendId);
+                    console.log('Redirecting to:', url); // Debug log
+                    window.location.href = url;
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+        </script>
+    </body>
+    </html>        

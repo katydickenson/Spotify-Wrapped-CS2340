@@ -22,4 +22,8 @@ urlpatterns = [
     path('view-saved-wrap/<int:wrap_id>/', views.view_saved_wrap, name='view_saved_wrap'),
     path('delete-wrap/<int:wrap_id>/', views.delete_wrap, name='delete_wrap'),
     path('delete-all-wraps/', views.delete_all_wraps, name='delete_all_wraps'),
+    path('duo-wrapped/', views.duo_wrapped, name='duo_wrapped'),
+    path('duo-comparison/<str:friend_id>/', views.duo_comparison, name='duo_comparison'),
+    path('initiate_spotify_auth/', views.initiate_spotify_auth, name='initiate_spotify_auth'),
+    path('get-wrap-share/<int:wrap_id>/', views.get_wrap_share, name='get_wrap_share'),
 ]

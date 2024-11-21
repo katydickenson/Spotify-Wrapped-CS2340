@@ -6,3 +6,12 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# SQLite database
+*.sqlite3
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Spotify cache
+.cache

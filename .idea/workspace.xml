@@ -7,7 +7,6 @@
     <list default="true" id="479797bc-8355-4d8c-8427-d398e464e9a3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/spotify_wrapped/.cache" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/spotify_wrapped/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spotify_wrapped/wrapped/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/spotify_wrapped/wrapped/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,12 +24,12 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;stexil&quot;
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "stexil"
   }
-}</component>
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -46,7 +45,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.pycharm.django.structure.promotion.once.per.project&quot;: &quot;true&quot;,
     &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;llm-updated&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/steevie./Documents/CS2340/Spotify-Wrapped-CS2340/spotify_wrapped/management&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
