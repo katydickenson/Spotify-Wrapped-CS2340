@@ -761,9 +761,22 @@ def duo_wrapped(request):
 def duo_comparison(request, friend_id):
     try:
         friend = SpotifyUser.objects.get(spotify_id=friend_id)
-
+        print(f"Found friend: {friend.spotify_id}")
+        
+        # Get friend's wrap
         friend_wrap = SavedWrap.objects.filter(user=friend).order_by('-created_at').first()
-
+        print(f"Friend wrap found: {bool(friend_wrap)}")
+        
+        friend_songs = []
+        if friend_wrap:
+            # For friend's wrap, we want their current_user_tracks since those are their actual songs
+            if isinstance(friend_wrap.tracks_data, dict) and 'current_user_tracks' in friend_wrap.tracks_data:
+                friend_songs = friend_wrap.tracks_data['current_user_tracks'][:5]
+            elif isinstance(friend_wrap.tracks_data, list):
+                friend_songs = friend_wrap.tracks_data[:5]
+            print(f"Friend songs extracted: {friend_songs}")
+        
+        # Get current user's songs
         current_user_songs = []
         spotify_id = request.session.get('spotify_id')
         if spotify_id:
@@ -771,31 +784,25 @@ def duo_comparison(request, friend_id):
                 current_user = SpotifyUser.objects.get(spotify_id=spotify_id)
                 current_user_wrap = SavedWrap.objects.filter(user=current_user).order_by('-created_at').first()
                 if current_user_wrap:
-                    if isinstance(current_user_wrap.tracks_data, list):
+                    if isinstance(current_user_wrap.tracks_data, dict) and 'current_user_tracks' in current_user_wrap.tracks_data:
+                        current_user_songs = current_user_wrap.tracks_data['current_user_tracks'][:5]
+                    elif isinstance(current_user_wrap.tracks_data, list):
                         current_user_songs = current_user_wrap.tracks_data[:5]
-                    elif isinstance(current_user_wrap.tracks_data, dict):
-                        current_user_songs = current_user_wrap.tracks_data.get('current_user_tracks', [])[:5]
+                print(f"Current user songs extracted: {current_user_songs}")
             except SpotifyUser.DoesNotExist:
                 pass
         
-        friend_has_wrap = bool(friend_wrap)
-        friend_songs = []
+        friend_has_wrap = bool(friend_wrap and friend_songs)
         
-        if friend_wrap:
-            if isinstance(friend_wrap.tracks_data, list):
-                friend_songs = friend_wrap.tracks_data[:5]
-            elif isinstance(friend_wrap.tracks_data, dict):
-                friend_songs = friend_wrap.tracks_data.get('current_user_tracks', [])[:5]
-            
-            combined_tracks = {
-                'current_user_tracks': current_user_songs,
-                'friend_tracks': friend_songs
-            }
-
+        if friend_has_wrap:
+            # Save this duo comparison as a new wrap
             duo_wrap = SavedWrap(
                 user=current_user,
                 title=f"Duo Wrapped - {friend.user_name}",
-                tracks_data=combined_tracks,
+                tracks_data={
+                    'current_user_tracks': current_user_songs,
+                    'friend_tracks': friend_songs
+                },
                 friend_tracks_data=friend_songs,
                 artists_data=[],
                 genres_data=[],
