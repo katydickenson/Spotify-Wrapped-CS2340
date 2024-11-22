@@ -901,7 +901,6 @@ def wrapped_results(request):
     genre_dict['valentines_genres_broad'] = ['jazz', 'acoustic', 'latin', 'piano', 'indie-pop']
     genre_dict['fourth_genres_broad'] = ['indie', 'funk', 'disco', 'blues', 'folk']
 
-    print(spotify.recommendation_genre_seeds())
     # Process tracks based on theme
     if holiday_theme != 'none':
         curr_genres = genre_dict[holiday_theme + "_genres"]
@@ -1045,23 +1044,11 @@ def wrapped_results(request):
         )
     except TypeError as e:
         print(f"Error generating personality description: {e}")
-        personality_html = "Error generating description."
-
     # Parse response
-    split_personality = personality_markdown.split('\n\n')
-    new_personality = []
-    new_personality.append(split_personality[1].replace("*", ""))
-    new_personality.append(split_personality[3].replace("*", ""))
-    new_personality.append(split_personality[5].replace("*", ""))
-    num = 0
-    for cur in new_personality:
-        print(num)
-        print(cur)
-        num += 1
+
     user = SpotifyUser.objects.get(spotify_id=spotify.me()['id'])
     user.save()
 
-    print("test1")
     wrap = SavedWrap.objects.create(
         user=spotify_user,
         title=request.session.get('wrapped_name', 'My Wrap'),
@@ -1070,9 +1057,8 @@ def wrapped_results(request):
         genres_data=formatted_genres,
         time_range=time_range,
         holiday_theme=holiday_theme,
-        personality_info=new_personality
+        personality_info=personality_markdown
     )
-    print("test2")
     return render(request, 'wrapped/wrapped_results.html', {
         'tracks': tracks_data,
         'artists': artists_data,
@@ -1081,7 +1067,7 @@ def wrapped_results(request):
         'holiday_theme': holiday_theme,
         'user_name': user_profile['display_name'],
         'wrapped_name': request.session.get('wrapped_name', ''),
-        'personality': new_personality
+        'personality': personality_markdown
     })
 
 @require_spotify_auth
@@ -1091,10 +1077,8 @@ def past_spotify_wraps(request):
         spotify_id = spotify.me()['id']
         spotify_user = SpotifyUser.objects.get(spotify_id=spotify_id)
         
-        print(f"Looking for wraps for user: {spotify_id}")
         wraps = SavedWrap.objects.filter(user=spotify_user).order_by('-created_at')
-        print(f"Found {wraps.count()} wraps")
-        
+
         return render(request, 'wrapped/past_spotify_wraps.html', {
             'wraps': wraps,
             'user_name': spotify_user.user_name,
@@ -1165,12 +1149,10 @@ def duo_wrapped(request):
 def duo_comparison(request, friend_id):
     try:
         friend = SpotifyUser.objects.get(spotify_id=friend_id)
-        print(f"Found friend: {friend.spotify_id}")
-        
+
         # Get friend's wrap
         friend_wrap = SavedWrap.objects.filter(user=friend).order_by('-created_at').first()
-        print(f"Friend wrap found: {bool(friend_wrap)}")
-        
+
         friend_songs = []
         if friend_wrap:
             # For friend's wrap, we want their current_user_tracks since those are their actual songs
@@ -1178,8 +1160,7 @@ def duo_comparison(request, friend_id):
                 friend_songs = friend_wrap.tracks_data['current_user_tracks'][:5]
             elif isinstance(friend_wrap.tracks_data, list):
                 friend_songs = friend_wrap.tracks_data[:5]
-            print(f"Friend songs extracted: {friend_songs}")
-        
+
         # Get current user's songs
         current_user_songs = []
         spotify_id = request.session.get('spotify_id')
@@ -1192,13 +1173,20 @@ def duo_comparison(request, friend_id):
                         current_user_songs = current_user_wrap.tracks_data['current_user_tracks'][:5]
                     elif isinstance(current_user_wrap.tracks_data, list):
                         current_user_songs = current_user_wrap.tracks_data[:5]
-                print(f"Current user songs extracted: {current_user_songs}")
             except SpotifyUser.DoesNotExist:
                 pass
         
         friend_has_wrap = bool(friend_wrap and friend_songs)
-        
+
         if friend_has_wrap:
+            personality_gen = GeminiPersonalityGenerator()
+            try:
+                gemini_comparison = personality_gen.friend_comparison(
+                    current_user_songs, friend_songs
+                )
+            except TypeError as e:
+                print(f"Error generating personality description: {e}")
+
             # Save this duo comparison as a new wrap
             duo_wrap = SavedWrap(
                 user=current_user,
@@ -1211,7 +1199,8 @@ def duo_comparison(request, friend_id):
                 artists_data=[],
                 genres_data=[],
                 created_at=timezone.now(),
-                time_range='all_time'
+                time_range='all_time',
+                comp=gemini_comparison
             )
             duo_wrap.save()
         
@@ -1220,6 +1209,7 @@ def duo_comparison(request, friend_id):
             'friend_has_wrap': friend_has_wrap,
             'friend_songs': friend_songs,
             'current_user_songs': current_user_songs,
+            'gemini_comparison': gemini_comparison,
         }
         
         return render(request, 'wrapped/duo_comparison.html', context)

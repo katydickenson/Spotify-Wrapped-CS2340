@@ -10,6 +10,7 @@ import os
 
 logger = logging.getLogger(__name__)
 genai.configure(api_key="GEMINI_API_KEY")
+model = genai.GenerativeModel('gemini-pro')
 
 
 def retry_on_failure(max_attempts=3, delay=1):
@@ -39,12 +40,6 @@ class GeminiPersonalityGenerator:
 
     @retry_on_failure(max_attempts=3)
     def generate_personality_description(gem, genres, artists):
-        #genai.configure(api_key='GEMINI_API_KEY')
-        model = genai.GenerativeModel('gemini-pro')
-        print("genres:")
-        print(genres)
-        print("artists:")
-        print(artists)
         try:
             prompt = f"""
                         Based on these music preferences over:
@@ -54,26 +49,158 @@ class GeminiPersonalityGenerator:
                         Create a personality description of this music listener. 
                         Format the response as a string with these sections:
                         - Overall Vibe
-                        - Personality Traits
-                        - Music Recommendations
+                        - Personality Traits (number or put dashes in front of the list)
+                        - Music Recommendations (number or put dashes in front of the list) (limit to 5)
 
                         Keep each section short and engaging.
                         """
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt).text
 
             logger.info(f"Successfully generated personality description for genres: {genres}")
-            return response.text
+
+            split_personality = response.split('\n\n')
+
+            num = 0
+            for cur in split_personality:
+                split_personality[num] = cur.replace("*", "")
+                num += 1
+            just_text = []
+            print(num)
+            if num == 6:
+                just_text.append(split_personality[1])
+                just_text.append(split_personality[3])
+                just_text.append(split_personality[5])
+
+                cur_count = 0
+                for line in just_text:
+                    print(cur_count)
+                    print(line)
+                    cur_count += 1
+            elif num == 4:
+                temp = split_personality[0].split('\n')
+                temp_txt = []
+                for line in temp:
+                    if line != temp[0]:
+                        temp_txt.append(line)
+                temp_txt = '\n'.join(temp_txt)
+                just_text.append(temp_txt)
+
+                temp = split_personality[1].split('\n')
+                temp_txt = []
+                for line in temp:
+                    if line != temp[0]:
+                        temp_txt.append(line)
+                temp_txt = '\n'.join(temp_txt)
+                just_text.append(temp_txt)
+
+                temp = split_personality[3].split('\n')
+                temp_txt = []
+                for line in temp:
+                    if line != temp[0]:
+                        temp_txt.append(line)
+                temp_txt = '\n'.join(temp_txt)
+                just_text.append(temp_txt)
+                cur_count = 0
+
+                for line in just_text:
+                    print(cur_count)
+                    print(line)
+                    cur_count += 1
+            elif num == 3:
+                print(split_personality[0])
+                if ': ' in split_personality[0]:
+                    temp_txt = split_personality[0].split(':')
+                    just_text.append(temp_txt[1])
+                elif ':\n' in split_personality[0]:
+                    temp_txt = split_personality[0].split(':\n')
+                    just_text.append(temp_txt[1])
+                elif 'e\n' in split_personality[0]:
+                    temp_txt = split_personality[0].split('e\n')
+                    just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+
+                temp = split_personality[1].split('\n')
+                temp_txt = []
+                for line in temp:
+                    if line != temp[0]:
+                        temp_txt.append(line)
+                temp_txt = '\n'.join(temp_txt)
+                just_text.append(temp_txt)
+
+                temp = split_personality[2].split('\n')
+                temp_txt = []
+                for line in temp:
+                    if line != temp[0]:
+                        temp_txt.append(line)
+                temp_txt = '\n'.join(temp_txt)
+                just_text.append(temp_txt)
+
+                cur_count = 0
+                for line in just_text:
+                    print(cur_count)
+                    print(line)
+                    cur_count += 1
+            else:
+                raise Exception("bad format")
+            print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+
+            return just_text
 
         except Exception as e:
             logger.error(f"Error generating personality description: {str(e)}")
             raise
 
 
-    def markdown_to_html(markdown_text):
+    def friend_comparison(self, cur_user_songs, friend_songs):
         try:
-            return markdown(markdown_text)
+            prompt = f"""
+                                Based on the user's top songs and their friend's top songs:
+                                User Songs: {cur_user_songs}
+                                Friend Songs: {friend_songs}
+
+                                Create a music and personality comparison for both users and songs that they both would like.
+                                Refer to the User as 'you' and the friend as 'they'.
+                                Format the response as a string with these sections:
+                                - Music Comparison
+                                - Personality Comparison
+                                - Music Recommendations
+                                
+                                Music Recommendations should be formatted like this:
+                                Based on your shared musical tastes, you and your friend might enjoy these songs:
+                                and give 5 shared songs
+                                
+                                Keep each section short and engaging.
+                                """
+            response = model.generate_content(prompt)
+            cut_response = response.text
+            #print(response.text)
+
+            logger.info(f"Successfully generated personality description for current user songs: {cur_user_songs}")
+            logger.info(f"Successfully generated personality description for current friend songs: {friend_songs}")
+
+            split_comparison = cut_response.split('\n\n')
+
+            num = 0
+            for cur in split_comparison:
+                split_comparison[num] = cur.replace("*", "")
+                num += 1
+            just_text = []
+            if num == 7:
+                just_text.append(split_comparison[1])
+                just_text.append(split_comparison[3])
+                just_text.append(split_comparison[5])
+                just_text.append(split_comparison[6])
+            elif num  == 6:
+                just_text.append(split_comparison[1])
+                just_text.append(split_comparison[3])
+                just_text.append(split_comparison[5])
+            elif num == 3:
+                just_text.append(split_comparison[0])
+                just_text.append(split_comparison[1])
+                just_text.append(split_comparison[2])
+            return just_text
+
         except Exception as e:
-            logger.error(f"Error formatting markdown: {str(e)}")
-            return f"<p>Error formatting response. Please try again.</p>"
-
-
+            logger.error(f"Error generating personality description: {str(e)}")
+            raise

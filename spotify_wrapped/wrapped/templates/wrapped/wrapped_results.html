@@ -208,6 +208,7 @@
             color: var(--spotify-light-gray);
             margin-bottom: 0.5rem;
         }
+        
         .llm-slide {
             display: flex;
             flex-direction: column;
@@ -337,6 +338,11 @@
         }
         
         .slide.genres {
+            transform: translateX(200%);
+            background-color: var(--spotify-black); /* Match background color */
+        }
+        
+        .slide.llm {
             transform: translateX(200%);
             background-color: var(--spotify-black); /* Match background color */
         }
@@ -497,6 +503,7 @@
                     {% endfor %}
                 </div>
             </div>
+        
             <div class="slide llm">
                 <div class="llm_container">
                     <h3 class="title">Your Musical Personality</h3>
@@ -507,6 +514,7 @@
                     </div>
                 </div>
             </div>
+        
         </div>
 
         <button class="nav-arrow prev" onclick="prevSlide()">
@@ -552,7 +560,7 @@
             currentSlide = newSlide;
         }
         function nextSlide() {
-            const order = ['tracks', 'artists', 'genres'];
+            const order = ['tracks', 'artists', 'genres', 'llm'];
             const currentIndex = order.indexOf(currentSlide);
             if (currentIndex < order.length - 1) {
                 updateSlides(order[currentIndex + 1]);
@@ -560,7 +568,7 @@
         }
 
         function prevSlide() {
-            const order = ['tracks', 'artists', 'genres'];
+            const order = ['tracks', 'artists', 'genres', 'llm'];
             const currentIndex = order.indexOf(currentSlide);
             if (currentIndex > 0) {
                 updateSlides(order[currentIndex - 1]);
