@@ -65,17 +65,10 @@ class GeminiPersonalityGenerator:
                 split_personality[num] = cur.replace("*", "")
                 num += 1
             just_text = []
-            print(num)
             if num == 6:
                 just_text.append(split_personality[1])
                 just_text.append(split_personality[3])
                 just_text.append(split_personality[5])
-
-                cur_count = 0
-                for line in just_text:
-                    print(cur_count)
-                    print(line)
-                    cur_count += 1
             elif num == 4:
                 temp = split_personality[0].split('\n')
                 temp_txt = []
@@ -100,14 +93,8 @@ class GeminiPersonalityGenerator:
                         temp_txt.append(line)
                 temp_txt = '\n'.join(temp_txt)
                 just_text.append(temp_txt)
-                cur_count = 0
 
-                for line in just_text:
-                    print(cur_count)
-                    print(line)
-                    cur_count += 1
             elif num == 3:
-                print(split_personality[0])
                 if ': ' in split_personality[0]:
                     temp_txt = split_personality[0].split(':')
                     just_text.append(temp_txt[1])
@@ -136,14 +123,8 @@ class GeminiPersonalityGenerator:
                 temp_txt = '\n'.join(temp_txt)
                 just_text.append(temp_txt)
 
-                cur_count = 0
-                for line in just_text:
-                    print(cur_count)
-                    print(line)
-                    cur_count += 1
             else:
                 raise Exception("bad format")
-            print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
 
             return just_text
 
@@ -151,7 +132,7 @@ class GeminiPersonalityGenerator:
             logger.error(f"Error generating personality description: {str(e)}")
             raise
 
-
+    @retry_on_failure(max_attempts=3)
     def friend_comparison(self, cur_user_songs, friend_songs):
         try:
             prompt = f"""
@@ -174,7 +155,6 @@ class GeminiPersonalityGenerator:
                                 """
             response = model.generate_content(prompt)
             cut_response = response.text
-            #print(response.text)
 
             logger.info(f"Successfully generated personality description for current user songs: {cur_user_songs}")
             logger.info(f"Successfully generated personality description for current friend songs: {friend_songs}")
@@ -189,16 +169,88 @@ class GeminiPersonalityGenerator:
             if num == 7:
                 just_text.append(split_comparison[1])
                 just_text.append(split_comparison[3])
-                just_text.append(split_comparison[5])
                 just_text.append(split_comparison[6])
+                cur_num = 0
+                for cur in just_text:
+                    print(cur)
+                    cur_num += 1
+
             elif num  == 6:
                 just_text.append(split_comparison[1])
                 just_text.append(split_comparison[3])
-                just_text.append(split_comparison[5])
+                if ': ' in split_comparison[5]:
+                    temp_txt = split_comparison[5].split(': ')
+                    just_text.append(temp_txt[1])
+                elif ':\n' in split_comparison[5]:
+                    temp_txt = split_comparison[5].split(':\n')
+                    just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+                cur_num = 0
+                for cur in just_text:
+                    print(cur)
+                    cur_num += 1
+
+            elif num == 4:
+                if ': ' in split_comparison[0]:
+                    temp_txt = split_comparison[0].split(': ')
+                    just_text.append(temp_txt[1])
+                elif '\n' in split_comparison[0]:
+                    temp_txt = split_comparison[0].split('\n')
+                    just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+
+                if ': ' in split_comparison[1]:
+                    temp_txt = split_comparison[1].split(': ')
+                    just_text.append(temp_txt[1])
+                elif '\n' in split_comparison[1]:
+                    temp_txt = split_comparison[1].split('\n')
+                    just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+                just_text.append(split_comparison[3])
+                cur_num = 0
+                for cur in just_text:
+                    print(cur)
+                    cur_num += 1
+
             elif num == 3:
-                just_text.append(split_comparison[0])
-                just_text.append(split_comparison[1])
-                just_text.append(split_comparison[2])
+                if ': ' in split_comparison[0]:
+                    temp_txt = split_comparison[0].split(': ')
+                    just_text.append(temp_txt[1])
+                elif ':\n' in split_comparison[0]:
+                    temp_txt = split_comparison[0].split(':\n')
+                    just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+
+                if ': ' in split_comparison[1]:
+                    temp_txt = split_comparison[1].split(': ')
+                    just_text.append(temp_txt[1])
+                elif ':\n' in split_comparison[1]:
+                    temp_txt = split_comparison[1].split(':\n')
+                    just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+
+                if ': ' in split_comparison[2]:
+                    temp_txt = split_comparison[2].split(': ')
+                    just_text.append(temp_txt[1])
+                elif ':\n' in split_comparison[2]:
+                    temp_txt = split_comparison[2].split(':\n')
+                    if len(temp_txt) == 3:
+                        just_text.append(temp_txt[2])
+                    else:
+                        just_text.append(temp_txt[1])
+                else:
+                    raise Exception("bad format")
+                cur_num = 0
+                for cur in just_text:
+                    print(cur)
+                    cur_num += 1
+            else:
+                raise Exception("bad format")
             return just_text
 
         except Exception as e:

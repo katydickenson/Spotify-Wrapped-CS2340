@@ -208,7 +208,7 @@
             color: var(--spotify-light-gray);
             margin-bottom: 0.5rem;
         }
-        
+
         .llm-slide {
             display: flex;
             flex-direction: column;
@@ -233,23 +233,23 @@
         animation:
             typing 3.5s steps(40, end),
             blink-caret .75s step-end infinite;
-    }
-
-    @keyframes typing {
-        from {
-            max-height: 0;
-            opacity: 0;
         }
-        to {
-            max-height: 1000px;
-            opacity: 1;
-        }
-    }
 
-    @keyframes blink-caret {
-        from, to { border-color: transparent }
-        50% { border-color: var(--spotify-green); }
-    }
+        @keyframes typing {
+            from {
+                max-height: 0;
+                opacity: 0;
+            }
+            to {
+                max-height: 1000px;
+                opacity: 1;
+            }
+        }
+    
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--spotify-green); }
+        }
 
         /* Title styling */
         .llm_container .title {
@@ -283,7 +283,43 @@
             color: var(--spotify-green);
             text-shadow: 0 0 5px var(--spotify-green);
         }
+        
+        
+        {################################}
+        
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
 
+        .card {
+            background: var(--spotify-dark-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            color: var(--spotify-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-text {
+            color: var(--spotify-light-gray);
+            margin-bottom: 1rem;
+        }
+
+        
+        {################################}
+        
+        
+        
         .nav-arrow {
             position: fixed;
             top: 50%;
@@ -341,7 +377,7 @@
             transform: translateX(200%);
             background-color: var(--spotify-black); /* Match background color */
         }
-        
+
         .slide.llm {
             transform: translateX(200%);
             background-color: var(--spotify-black); /* Match background color */
@@ -503,18 +539,30 @@
                     {% endfor %}
                 </div>
             </div>
-        
+
             <div class="slide llm">
-                <div class="llm_container">
+            
+            
+                <div class="row"></div>
+                {% for line in personality %} 
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            Personality Profile:
+                        </h5>
+                        <p class="card-text">{{ line }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+                {% comment %}<div class="llm_container">
                     <h3 class="title">Your Musical Personality</h3>
                     <div class="content">
                         {% for paragraph in personality %}
                             <div class="para">{{ paragraph }}</div>
                         {% endfor %}
                     </div>
-                </div>
+                </div>{% endcomment %}
             </div>
-        
         </div>
 
         <button class="nav-arrow prev" onclick="prevSlide()">

@@ -26,19 +26,19 @@
         cursor: pointer;
         transition: all 0.3s ease;
         margin: 0 5px;
-    }
-
-    .btn-share:hover {
-        background-color: #1ed760;
-        transform: scale(1.05);
-    }
-
-    .button-group {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        margin-top: 15px;
-    }
+        }
+    
+        .btn-share:hover {
+            background-color: #1ed760;
+            transform: scale(1.05);
+        }
+    
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
 
         main {
             padding: 8rem 2rem 2rem;
@@ -176,11 +176,12 @@
             font-weight: bold;
             overflow: hidden; /* Add this to ensure the image stays within the circle */
         }
+        
         .user-avatar img {
         width: 100%;
         height: 100%;object-fit: cover; /* This ensures the image covers the entire space properly */
-            
         }
+        
         * {
             margin: 0;
             padding: 0;
@@ -273,17 +274,17 @@
                     </h5>
                     <p class="card-text">Created: {{ wrap.created_at|date:"M d, Y" }}</p>
                     <div class="button-group">
-    <a href="{% url 'view_saved_wrap' wrap.id %}" class="btn-primary">View Wrap</a>
-    <button class="btn-share" onclick="shareWrap('{{ wrap.id }}')">
-        Share Wrap
-    </button>
-    <form action="{% url 'delete_wrap' wrap.id %}" method="POST" style="display: inline;">
-        {% csrf_token %}
-        <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this wrap?')">
-            Delete
-        </button>
-    </form>
-</div>
+                        <a href="{% url 'view_saved_wrap' wrap.id %}" class="btn-primary">View Wrap</a>
+                        <button class="btn-share" onclick="shareWrap('{{ wrap.id }}')">
+                            Share Wrap
+                        </button>
+                        <form action="{% url 'delete_wrap' wrap.id %}" method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this wrap?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
             {% empty %}

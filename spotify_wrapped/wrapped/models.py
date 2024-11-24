@@ -92,7 +92,7 @@ class SavedWrap(models.Model):
     genres_data = models.JSONField()
     time_range = models.CharField(max_length=50)
     holiday_theme = models.CharField(max_length=50, null=True, blank=True)
-    personality_info = models.CharField(max_length=255, null=True, blank=True)
+    personality_info = models.CharField(max_length=500, null=True, blank=True)
     friend_tracks_data = models.JSONField(null=True, blank=True)
     comp = models.CharField(max_length= 255, null=True, blank=True)
 
