@@ -94,7 +94,7 @@ class SavedWrap(models.Model):
     holiday_theme = models.CharField(max_length=50, null=True, blank=True)
     personality_info = models.CharField(max_length=500, null=True, blank=True)
     friend_tracks_data = models.JSONField(null=True, blank=True)
-    comp = models.CharField(max_length= 255, null=True, blank=True)
+    comp = models.CharField(max_length=256, null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']

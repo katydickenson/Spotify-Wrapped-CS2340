@@ -955,6 +955,7 @@ def wrapped_results(request):
         
         genre_count = {}  
         artists_data = []
+        artists_names = []
         
         for artist in top_artists['items']:
             artists_data.append({
@@ -962,6 +963,7 @@ def wrapped_results(request):
                 'image_url': artist['images'][0]['url'] if artist['images'] else None,
                 'genres': artist['genres']
             })
+            artists_names.append(artist['name'])
             for genre in artist['genres']:
                 genre_count[genre] = genre_count.get(genre, 0) + 1
             
@@ -975,6 +977,7 @@ def wrapped_results(request):
             'count': count
         } for genre, count in top_genres
     ]
+
 
     # Initialize Gemini Personality Generator
     personality_gen = GeminiPersonalityGenerator()
@@ -990,6 +993,7 @@ def wrapped_results(request):
     user = SpotifyUser.objects.get(spotify_id=spotify.me()['id'])
     user.save()
 
+
     wrap = SavedWrap.objects.create(
         user=spotify_user,
         title=request.session.get('wrapped_name', 'My Wrap'),
@@ -998,8 +1002,10 @@ def wrapped_results(request):
         genres_data=formatted_genres,
         time_range=time_range,
         holiday_theme=holiday_theme,
-        personality_info=personality_markdown
+        personality_info=personality_markdown,
+        comp=personality_markdown
     )
+
     return render(request, 'wrapped/wrapped_results.html', {
         'tracks': tracks_data,
         'artists': artists_data,
