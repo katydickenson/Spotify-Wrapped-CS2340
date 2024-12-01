@@ -67,8 +67,8 @@ class GeminiPersonalityGenerator:
             just_text = []
             if num == 6:
                 just_text.append(split_personality[1])
-                just_text.append(split_personality[3])
-                just_text.append(split_personality[5])
+                just_text.append(split_personality[3].split('\n'))
+                just_text.append(split_personality[5].split('\n'))
             elif num == 4:
                 temp = split_personality[0].split('\n')
                 temp_txt = []
@@ -84,7 +84,7 @@ class GeminiPersonalityGenerator:
                     if line != temp[0]:
                         temp_txt.append(line)
                 temp_txt = '\n'.join(temp_txt)
-                just_text.append(temp_txt)
+                just_text.append(temp_txt.split('\n'))
 
                 temp = split_personality[3].split('\n')
                 temp_txt = []
@@ -92,7 +92,7 @@ class GeminiPersonalityGenerator:
                     if line != temp[0]:
                         temp_txt.append(line)
                 temp_txt = '\n'.join(temp_txt)
-                just_text.append(temp_txt)
+                just_text.append(temp_txt.split('\n'))
 
             elif num == 3:
                 if ': ' in split_personality[0]:
@@ -113,7 +113,7 @@ class GeminiPersonalityGenerator:
                     if line != temp[0]:
                         temp_txt.append(line)
                 temp_txt = '\n'.join(temp_txt)
-                just_text.append(temp_txt)
+                just_text.append(temp_txt.split('\n'))
 
                 temp = split_personality[2].split('\n')
                 temp_txt = []
@@ -121,7 +121,7 @@ class GeminiPersonalityGenerator:
                     if line != temp[0]:
                         temp_txt.append(line)
                 temp_txt = '\n'.join(temp_txt)
-                just_text.append(temp_txt)
+                just_text.append(temp_txt.split('\n'))
 
             else:
                 raise Exception("bad format")
@@ -168,29 +168,19 @@ class GeminiPersonalityGenerator:
             just_text = []
             if num == 7:
                 just_text.append(split_comparison[1])
-                just_text.append(split_comparison[3])
-                just_text.append(split_comparison[6])
-                cur_num = 0
-                for cur in just_text:
-                    print(cur)
-                    cur_num += 1
-
+                just_text.append(split_comparison[3].split('\n'))
+                just_text.append(split_comparison[6].split('\n'))
             elif num  == 6:
                 just_text.append(split_comparison[1])
-                just_text.append(split_comparison[3])
+                just_text.append(split_comparison[3].split('\n'))
                 if ': ' in split_comparison[5]:
                     temp_txt = split_comparison[5].split(': ')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 elif ':\n' in split_comparison[5]:
                     temp_txt = split_comparison[5].split(':\n')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 else:
                     raise Exception("bad format")
-                cur_num = 0
-                for cur in just_text:
-                    print(cur)
-                    cur_num += 1
-
             elif num == 4:
                 if ': ' in split_comparison[0]:
                     temp_txt = split_comparison[0].split(': ')
@@ -203,17 +193,13 @@ class GeminiPersonalityGenerator:
 
                 if ': ' in split_comparison[1]:
                     temp_txt = split_comparison[1].split(': ')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 elif '\n' in split_comparison[1]:
                     temp_txt = split_comparison[1].split('\n')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 else:
                     raise Exception("bad format")
-                just_text.append(split_comparison[3])
-                cur_num = 0
-                for cur in just_text:
-                    print(cur)
-                    cur_num += 1
+                just_text.append(split_comparison[3].split('\n'))
 
             elif num == 3:
                 if ': ' in split_comparison[0]:
@@ -227,28 +213,25 @@ class GeminiPersonalityGenerator:
 
                 if ': ' in split_comparison[1]:
                     temp_txt = split_comparison[1].split(': ')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 elif ':\n' in split_comparison[1]:
                     temp_txt = split_comparison[1].split(':\n')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 else:
                     raise Exception("bad format")
 
                 if ': ' in split_comparison[2]:
                     temp_txt = split_comparison[2].split(': ')
-                    just_text.append(temp_txt[1])
+                    just_text.append(temp_txt[1].split('\n'))
                 elif ':\n' in split_comparison[2]:
                     temp_txt = split_comparison[2].split(':\n')
                     if len(temp_txt) == 3:
-                        just_text.append(temp_txt[2])
+                        just_text.append(temp_txt[2].split('\n'))
                     else:
-                        just_text.append(temp_txt[1])
+                        just_text.append(temp_txt[1].split('\n'))
                 else:
                     raise Exception("bad format")
-                cur_num = 0
-                for cur in just_text:
-                    print(cur)
-                    cur_num += 1
+
             else:
                 raise Exception("bad format")
             return just_text

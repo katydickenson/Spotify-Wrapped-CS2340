@@ -98,6 +98,43 @@
             font-size: 0.9rem;
         }
 
+        .bottom-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 1200px; /* Match the max-width of the top section */
+            margin: 2rem auto; /* Center the bottom section */
+            padding: 0 2rem;
+        }
+        
+        .card {
+            background: var(--spotify-dark-gray);
+            border-radius: 8px;
+            padding: 2rem;
+            width: 100%; /* Ensure each card spans the full width of the container */
+            box-sizing: border-box; /* Prevent padding from exceeding the container width */
+        }
+        
+        li{
+            list-style: none;
+            color: var(--spotify-light-gray);
+            margin-bottom: 1rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            color: var(--spotify-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-text {
+            color: var(--spotify-light-gray);
+            margin-bottom: 1rem;
+        }
+
         .back-section {
             position: absolute;
             top: 1rem;
@@ -282,21 +319,22 @@
 <body class="spotify-theme">
     <nav class="navbar">
         <div class="user-info">
-            {% if user.profile_image %}
-                <img src="{{ user.profile_image }}" alt="{{ user.user_name }}" class="user-avatar">
+            {% if profile_image %}
+                <img src="{{ profile_image }}" alt="{{ user_name }}" class="user-avatar">
             {% else %}
-                <div class="user-avatar">{{ user.user_name|slice:":1"|upper }}</div>
+                <div class="user-avatar">
+                    {{ user_name|slice:":1"|upper }}
+                </div>
             {% endif %}
-            <span class="user-name">{{ user.user_name }}</span>
+            <span>{{ user_name }}</span>
         </div>
-        <a href="{% url 'duo_wrapped' %}" class="back-button">
+        <a href="{% url 'wrapped_filters' %}" class="back-button">
             <span class="back-arrow">←</span> Back
         </a>
     </nav>
-
-
+    
     <div class="title-section">
-        <h1>Your Duo Wrapped</h1>
+        <h1>Your Duo Wrapped with {{ friend.user_name }}</h1>
     </div>
 
     <div class="comparison-container">
@@ -358,9 +396,51 @@
                     </li>
                     {% endfor %}
                 </ul>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
-
+    </div>
+    
+    <div class="bottom-cards">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Music Comparison:</h3>
+                <p class="card-text">
+                    <ul>
+                        <li>
+                            {{ gemini_comparison.0 }}
+                        </li>
+                    </ul>
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Personality Comparison:</h3>
+                <p class="card-text">
+                    <ul>
+                        {% for item in gemini_comparison.1 %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Music Recommendations:</h3>
+                <p class="card-text">
+                    <ul>
+                        {% for item in gemini_comparison.2 %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    
     <script>
         function copyLink() {
             const linkInput = document.querySelector('.share-link');

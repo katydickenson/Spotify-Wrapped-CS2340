@@ -906,6 +906,7 @@ def wrapped_results(request):
         
         matched_artists_dict = {}
         genre_count = {}
+        artists_names = []
         
         for track in top_tracks['items']:
             artist_id = track['artists'][0]['id']
@@ -920,6 +921,7 @@ def wrapped_results(request):
                     'preview_url': track['preview_url']
                 }
                 tracks_data.append(track_data)
+                artists_names.append(artist['name'])
                 
                 if artist_id not in matched_artists_dict:
                     matched_artists_dict[artist_id] = {
@@ -1151,13 +1153,17 @@ def duo_comparison(request, friend_id):
                 comp=gemini_comparison
             )
             duo_wrap.save()
-        
+
+        print(current_user.profile_image)
+        print(current_user.user_name)
+
         context = {
             'friend': friend,
             'friend_has_wrap': friend_has_wrap,
             'friend_songs': friend_songs,
             'current_user_songs': current_user_songs,
             'gemini_comparison': gemini_comparison,
+            'user_name': current_user.user_name,
         }
         
         return render(request, 'wrapped/duo_comparison.html', context)
