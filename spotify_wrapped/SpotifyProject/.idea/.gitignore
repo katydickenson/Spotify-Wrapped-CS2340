@@ -15,3 +15,6 @@ __pycache__/
 
 # Spotify cache
 .cache
+
+# Environment variables
+.env

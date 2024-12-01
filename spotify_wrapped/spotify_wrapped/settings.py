@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -116,11 +119,11 @@ USE_I18N = True
 
 USE_TZ = True
 
-SPOTIFY_CLIENT_ID = 'd7019771ebf5451f9a5759e846b7c975' #'d7019771ebf5451f9a5759e846b7c975'
-SPOTIFY_CLIENT_SECRET = '49f9de6b77cd47b5ae65ed5a7f3c11a9' #'49f9de6b77cd47b5ae65ed5a7f3c11a9'
+SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
 SPOTIFY_REDIRECT_URI = 'http://localhost:8000/callback/'
 
-GEMINI_API_KEY = 'AIzaSyCTnKZp6V0xlpCBorBFbxlRm3Z3WDXVx5U'
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
